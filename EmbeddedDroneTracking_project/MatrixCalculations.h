@@ -226,8 +226,8 @@ for(int j = 0;j < num_of_iterations;j++){
         T s = annihilated_val/denum;
         MatrixObject<T> G = generateIdentityMatrix(A.getRows());
         G(i-1,i-1) = c;
-        G(i-1,i) = s;
-        G(i,i-1) = -s;
+        G(i-1,i) = -s;
+        G(i,i-1) = s;
         G(i,i) = c; 
         R = G.Transpose()*R;
         Q = Q*G;
@@ -235,6 +235,35 @@ for(int j = 0;j < num_of_iterations;j++){
    }
 }
 return {Q,R};   
+}
+
+const MatrixObject<T> LeastSquareSolver_QRDecomposition(const MatrixObject<T>& A, const MatrixObject<T>& b)const{
+const double eps = 1e-7;
+T min_val = min(A.getRows(),A.getCols());
+T differance_val = A.getRows()-min_val;
+auto [Q,R] = QRDecomposition_GivensApproach(A);
+MatrixObject<T> R_tilde(A.getRows()-differance_val,R.getCols());
+MatrixObject<T> b_tilde = Q.Transpose()*b;
+MatrixObject<T> b_filtered(A.getRows()-differance_val,b_tilde.getCols());
+MatrixObject<T> x(b_filtered.getRows(),1);
+
+
+for(int i = 0;i < R_tilde.getRows();i++){
+   for(int j = 0; j < R_tilde.getCols();j++){
+      R_tilde(i,j) = R(i,j);
+      }
+   
+   b_filtered(i,b_filtered.getCols()-1) = b_tilde(i,b_tilde.getCols()-1);
+}
+
+for(int i = R_tilde.getRows()-1;i >= 0;i--){
+   T summation = 0.0;
+   for(int j = i+1;j < R_tilde.getCols();j++){
+      summation += R_tilde(i,j)*x(j,x.getCols()-1);
+   }
+   x(i,x.getCols()-1) = (b_filtered(i,b_filtered.getCols()-1) - summation)/R_tilde(i,i);
+}
+return x;
 }
 
 };
