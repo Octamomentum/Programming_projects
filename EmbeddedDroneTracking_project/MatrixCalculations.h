@@ -16,7 +16,7 @@ class MatrixCalculations{
 
 public:
 
-const bool isLinearDependent(const MatrixObject<T>& A) const{
+bool isLinearDependent(const MatrixObject<T>& A) const{
 MatrixObject<T> G = A;
 bool isLinDep = false;
 int num_of_iterations = min(G.getRows(),G.getCols());
@@ -53,7 +53,7 @@ if(isLinDep == false){
 return isLinDep;   
 }
 
-const T dot_product(const MatrixObject<T>& v1, const MatrixObject<T>& v2) const{
+T dot_product(const MatrixObject<T>& v1, const MatrixObject<T>& v2) const{
 T summation = 0.0;
 for(int i = 0;i < v1.getRows();i++){
    summation += v1(i,v1.getCols()-1)*v2(i,v2.getCols()-1);
@@ -61,7 +61,7 @@ for(int i = 0;i < v1.getRows();i++){
 return summation;   
 }
 
-const MatrixObject<T> generateIdentityMatrix(int r) const{
+MatrixObject<T> generateIdentityMatrix(int r) const{
 MatrixObject<T> identity_matrix(r,r);
 for(int i = 0;i < r;i++){
    identity_matrix(i,i) = 1.0;
@@ -153,7 +153,7 @@ for(int i = 0;i < b.getRows();i++){
 return y;    
 }
 
-const MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& U, const MatrixObject<T>& y)const {
+MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& U, const MatrixObject<T>& y)const {
 
 MatrixObject<T> x(y.getRows(),y.getCols());
 for(int i = y.getRows()-1;i >= 0;i--){
@@ -167,11 +167,11 @@ for(int i = y.getRows()-1;i >= 0;i--){
 return x;    
 }
 
-const double square(const double x)const{
+double square(const double x)const{
 return x*x;
 }
 
-const double L2Norm(const MatrixObject<T>& res_vec)const{
+double L2Norm(const MatrixObject<T>& res_vec)const{
 
 double res = 0.0;
 
@@ -182,7 +182,7 @@ for(int i = 0;i < res_vec.getRows();i++){
 return sqrt(res);    
 }
 
-const tuple<T,T> GivensParameters(const T& r1, const T& r2) const{ 
+tuple<T,T> GivensParameters(const T& r1,const T& r2) const { 
 T denum = sqrt(square(r1) + square(r2));
 if(denum == 0){
   throw runtime_error("The Givens approach diverges."); 
@@ -194,7 +194,7 @@ else{
 }
 }
 
-const MatrixObject<T> GivensMatrix(const MatrixObject<T>& A, const int& annihil_ind, const int& curr_col)const{
+MatrixObject<T> GivensMatrix(const MatrixObject<T>& A, int& annihil_ind, int& curr_col)const{
 auto [c,s] = GivensParameters(A(annihil_ind-1,curr_col),A(annihil_ind,curr_col)); 
 MatrixObject<T> G = generateIdentityMatrix(A.getRows());
 G(annihil_ind-1,annihil_ind-1) = c;
@@ -204,7 +204,7 @@ G(annihil_ind,annihil_ind) = c;
 return G;   
 }
 
-const tuple<MatrixObject<T>,MatrixObject<T>> QRDecomposition_GivensApproach(const MatrixObject<T>& A)const{
+tuple<MatrixObject<T>,MatrixObject<T>> QRDecomposition_GivensApproach(const MatrixObject<T>& A)const{
 const double eps = 1e-7;
 MatrixObject<T> Q = generateIdentityMatrix(A.getRows());
 MatrixObject<T> R = A;
@@ -224,8 +224,8 @@ for(int j = 0;j < num_of_iterations;j++){
 return {Q,R};   
 }
 
-const tuple<MatrixObject<T>,MatrixObject<T>> generateTruncatedMatrices(const MatrixObject<T> & A, const MatrixObject<T>& b)const{
-T truncated_rows = min(A.getRows(),A.getCols());
+tuple<MatrixObject<T>,MatrixObject<T>> generateTruncatedMatrices(const MatrixObject<T> & A, const MatrixObject<T>& b)const {
+int truncated_rows = min(A.getRows(),A.getCols());
 MatrixObject<T> A_trunc(truncated_rows,A.getCols());
 MatrixObject<T> b_trunc(truncated_rows,b.getCols());
 
@@ -239,7 +239,7 @@ for(int i = 0;i < A_trunc.getRows();i++){
 return {A_trunc, b_trunc};
 }
 
-const MatrixObject<T> LeastSquareSolver_QRDecomposition(const MatrixObject<T>& A, const MatrixObject<T>& b)const{
+MatrixObject<T> LeastSquareSolver_QRDecomposition(const MatrixObject<T>& A, const MatrixObject<T>& b)const {
 const double eps = 1e-7;
 auto [Q,R] = QRDecomposition_GivensApproach(A);
 MatrixObject<T> b_tilde = Q.Transpose()*b;

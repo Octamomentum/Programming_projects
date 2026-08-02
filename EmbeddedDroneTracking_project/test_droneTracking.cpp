@@ -7,6 +7,7 @@ using namespace std;
 MatrixCalculations<double> matcalc;
 
 TEST(GivensCalc,Example){
+   
    MatrixObject<double> A(4,3);
    A(0,0) = 1.0;
    A(0,1) = 1.0;

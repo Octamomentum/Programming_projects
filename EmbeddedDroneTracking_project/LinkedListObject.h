@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <memory>
 
 using namespace std;
 
@@ -15,9 +17,10 @@ private:
 
 struct Node{
 T data;
-Node* next;
+unique_ptr<Node> next = nullptr;
+Node(const T& val) : data(val), next(nullptr){}
 };
-Node* head = nullptr;
+unique_ptr<Node> head = nullptr;
 Node* tail = nullptr;
 int length = 0;
 
@@ -28,15 +31,12 @@ public:
 LinkedListObject(){};
 
 void clearList(){
-Node* current = head;
 
-while(current != nullptr){
-    Node* newNode = current->next;
-    delete current;
-    current = newNode;
+while(head != nullptr){
+    head = move(head -> next);
 }
-head = nullptr;
 tail = nullptr; 
+length = 0;
 }
 
 ~LinkedListObject(){
@@ -47,72 +47,33 @@ clearList();
 
 LinkedListObject(const LinkedListObject<T>& original_list){
 
-if(original_list.head == nullptr){
-  head = nullptr;
-  tail = nullptr;
-  length = 0;  
+if(original_list.head == nullptr){ 
   return;
 }
 
-head = new Node(original_list.head -> data);
+head = make_unique<Node>(original_list.head -> data);
 length = original_list.length;
 
-Node* currentOriginal = original_list.head -> next;
-Node* currentCopy = head;
+Node* currentOriginal = original_list.head -> next.get();
+Node* currentCopy = head.get();
 
 while(currentOriginal != nullptr){
-    currentCopy -> next = new Node(currentOriginal->data);
-    currentOriginal = currentOriginal -> next;
-    currentCopy = currentCopy -> next;
+    currentCopy -> next = make_unique<Node>(currentOriginal->data);
+    currentOriginal = currentOriginal -> next.get();
+    currentCopy = currentCopy -> next.get();
 }
 tail = currentCopy;
 
-}
-
-LinkedListObject<T>& operator=(const LinkedListObject<T>& original_list){
-
-if(this != &original_list){
-  clearList();   
-  if(original_list.head == nullptr){
-  head = nullptr;
-  tail = nullptr;
-  length = 0;  
-  }
-
-  head = new Node(original_list.head -> data);
-  length = original_list.length;
-
-  Node* currentOriginal = original_list.head -> next;
-  Node* currentCopy = head;
-
-  while(currentOriginal != nullptr){
-       currentCopy -> next = new Node(currentOriginal->data);
-       currentOriginal = currentOriginal -> next;
-       currentCopy = currentCopy -> next;
-  }
-  tail = currentCopy;
-
-}
-
-return *this;
 }
 
 //Move constructor and its assigned operator 
 
 LinkedListObject(LinkedListObject<T>&& original_list) noexcept{
 
-if(original_list.head == nullptr){
-  head = nullptr;
-  tail = nullptr;
-  length = 0;
-  return;
-}
-
-head = original_list.head;
+head = move(original_list.head);
 tail = original_list.tail;
 length = original_list.length;
 
-original_list.head = nullptr;
 original_list.tail = nullptr;
 original_list.length = 0;
 
@@ -120,21 +81,10 @@ original_list.length = 0;
 
 LinkedListObject<T>& operator=(LinkedListObject<T>&& original_list) noexcept{
 
-if(this != &original_list){
-  if(original_list.head == nullptr){
-     head = nullptr;
-     tail = nullptr;
-     length = 0;
-  }
-
-  head = original_list.head;
-  tail = original_list.tail;
-  length = original_list.length;
-
-  original_list.head = nullptr;
-  original_list.tail = nullptr;
-  original_list.length = 0; 
-}    
+swap(head,original_list.head);
+swap(tail,original_list.tail);
+swap(length,original_list.length);
+   
 return *this;
 
 }
@@ -142,14 +92,15 @@ return *this;
 //Method that adds element to the list
 
 void addElement(const T& val){
-Node* newNode = new Node{val,nullptr};
+auto newNode = make_unique<Node>(val);
 if(head == nullptr){
-  head = newNode;  
-  tail = newNode;
+  head = move(newNode);  
+  tail = head.get();
 }
 else{
-   tail->next = newNode;
-   tail = newNode; 
+   Node* newNext = newNode.get();
+   tail->next = move(newNode);
+   tail = newNext; 
 }
 length++;    
 }
@@ -157,11 +108,11 @@ length++;
 //Method that prints the content of a list
 
 void print(){
-Node* current = head;
+Node* current = head.get();
 cout << "\nPrinting list content...\n";
 while(current != nullptr){
     cout << current -> data << "->";
-    current = current -> next;
+    current = current -> next.get();
 }    
 }
 
@@ -172,18 +123,17 @@ T& operator[](const int& ind) const{
 if(head == nullptr){
    throw runtime_error("The list is empty, add elements."); 
 }
-else{
    int counter = 0;
-   Node* current = head;
+   Node* current = head.get();
    while(current != nullptr){
        if(counter == ind){
          return current -> data;
        }
        counter++;
-       current = current -> next;
+       current = current -> next.get();
    }
    throw invalid_argument("Out of bounds."); 
-}
+
 }
 
 //Method that removes element given a valid index
@@ -197,27 +147,22 @@ else if(ind < 0 || ind >= this -> getLength()){
 }
 else{
    if(ind == 0){
-     Node* temp = head;
-     head = head -> next;
-     delete temp;
+     head = move(head -> next);
      length--;
      if(head == nullptr){
        tail = nullptr;
-       return;
      } 
    }
    else{
-      Node* previous = head;
+      Node* previous = head.get();
       for(int i = 0;i < ind-1;i++){
-         previous = previous -> next;
+         previous = previous -> next.get();
       }
-      Node* deletedNode = previous -> next;
-      previous -> next = deletedNode -> next;
+      unique_ptr<Node> deletedNode = move(previous -> next);
+      previous -> next = move(deletedNode -> next);
       if(deletedNode -> next == nullptr){
         tail = previous;
-        tail -> next;
       }
-      delete deletedNode;
       length--;
    }
 }
@@ -231,7 +176,7 @@ return length;
 
 //Equal operator that checks if two lists has the same length and identical elements
 
-const bool operator==(LinkedListObject<T> lst) const{
+bool operator==(const LinkedListObject<T>& lst) const{
 if(this -> getLength() != lst.getLength()){  
   return false;  
 }
@@ -247,13 +192,13 @@ return true;
 
 //Gets the first element of the list
 
-const int getFirstElement() const{
+const T getFirstElement() const{
 return (*this)[0];  
 }
 
 //Gets the last element of the list
 
-const int getLastElement() const{
+const T getLastElement() const{
 return (*this)[this->getLength() -1];
 }
 

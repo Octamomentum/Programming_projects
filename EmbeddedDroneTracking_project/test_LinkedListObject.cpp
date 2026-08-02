@@ -31,8 +31,7 @@ TEST(LinkedListTest,CopyTest){
     LinkedListObject<double> lst;
     lst.addElement(3);
     lst.addElement(7);
-    LinkedListObject<double> copied_lst;
-    copied_lst = lst;
+    LinkedListObject<double> copied_lst = lst;
     EXPECT_EQ(lst,copied_lst);
 }
 
