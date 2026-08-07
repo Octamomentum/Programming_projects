@@ -194,30 +194,27 @@ else{
 }
 }
 
-MatrixObject<T> GivensMatrix(const MatrixObject<T>& A, int& annihil_ind, int& curr_col)const{
-auto [c,s] = GivensParameters(A(annihil_ind-1,curr_col),A(annihil_ind,curr_col)); 
-MatrixObject<T> G = generateIdentityMatrix(A.getRows());
-G(annihil_ind-1,annihil_ind-1) = c;
-G(annihil_ind-1,annihil_ind) =  -s;
-G(annihil_ind, annihil_ind-1) = s;
-G(annihil_ind,annihil_ind) = c;
-return G;   
-}
-
 tuple<MatrixObject<T>,MatrixObject<T>> QRDecomposition_GivensApproach(const MatrixObject<T>& A)const{
 const double eps = 1e-7;
-MatrixObject<T> Q = generateIdentityMatrix(A.getRows());
 MatrixObject<T> R = A;
-T num_of_iterations = min(A.getRows(),A.getCols());
-for(int j = 0;j < num_of_iterations;j++){
-   for(int i = A.getRows()-1;i > j;i--){
+MatrixObject<T> Q = generateIdentityMatrix(A.getRows());
+for(int j = 0;j < A.getCols();++j){
+   for(int i = j + 1;i < A.getRows();++i){
       T val = R(i,j);
       if(abs(val) > eps){
-        T pivot_val = R(i-1,j);
-        T annihilated_val = R(i,j);
-        MatrixObject<T> G = GivensMatrix(R,i,j);
-        R = G.Transpose()*R;
-        Q = Q*G;
+        auto [c,s] = GivensParameters(R(j,j),R(i,j));
+        for(int k = j;k<A.getCols();++k){
+           double r_pivot = R(j,k);
+           double r_target = R(i,k);
+           R(j,k) = c*r_pivot + s*r_target;
+           R(i,k) = c*r_target - s*r_pivot; 
+        }
+         for(int k = 0;k < A.getRows();++k){
+           double q_pivot = Q(k,j);
+           double q_target = Q(k,i);
+           Q(k,j) = c*q_pivot + s*q_target;
+           Q(k,i) = c*q_target - s*q_pivot; 
+        }
       }
    }
 }
@@ -248,5 +245,25 @@ auto [R_filtered,b_filtered] = generateTruncatedMatrices(R,b_tilde);
 
 return BackwardSubstitution(R_filtered,b_filtered);
 }
+
+T Det_calc(const MatrixObject<T>& A, const int& r1, const int& r2){
+  MatrixObject<T> DetMatrix(3,3);
+  for(int j = 0;j < 3;j++){
+    if(j == 2){
+      DetMatrix(0,j) = 1.0;
+      DetMatrix(1,j) = 1.0;
+      DetMatrix(2,j) = 1.0;
+    }
+    DetMatrix(r1,j) = A(r1,j);
+    DetMatrix(r2,j) = A(r2,j);     
+  }
+  
+  T term1 = DetMatrix(0,0)*(DetMatrix(1,1)*DetMatrix(2,2) - DetMatrix(1,2)*DetMatrix(2,1));
+  T term2 = DetMatrix(0,1)*(DetMatrix(1,0)*DetMatrix(2,2) - DetMatrix(2,0)*DetMatrix(0,2));
+  T term3 = DetMatrix(0,2)*(DetMatrix(1,0)*DetMatrix(2,1) - DetMatrix(2,0)*DetMatrix(1,1));
+  T res = term1 - term2 + term3;
+  return res;
+}
+
 
 };
