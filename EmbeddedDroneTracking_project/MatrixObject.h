@@ -199,32 +199,4 @@ for(size_t i = 0;i < getRows();i++){
 return true;   
 }
 
-//Retrieving row/column vector given a column/row from a matrix
-
-MatrixObject<T> getRowVector(int r) const{
-MatrixObject<T> row_vec(data.cols,1);
-for(int j = 0;j < data.cols;j++){
-   row_vec(j,0) = (*this)(r,j);
-}
-return row_vec;    
-}
-
-MatrixObject<T> getColumnVector(int c) const{
-MatrixObject<T> col_vec(data.rows,1);
-for(int i = 0;i < data.rows;i++){
-   col_vec(i,0) = (*this)(i,c);
-}
-return col_vec;    
-}
-
-//A method that swaps two rows of a matrix
-
-void row_swap(int r1, int r2) const{
-for(int j = 0; j < this -> getCols();j++){
-   T temp = (*this)(r1,j);
-   (*this)(r1,j) = (*this)(r2,j);
-   (*this)(r2,j) = temp;
-}
-}
-
 };
