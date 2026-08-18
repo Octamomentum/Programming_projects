@@ -1,4 +1,4 @@
-//This class constructs a matrix as a data  containter that takes element (i,j) and is implemented
+//This class constructs a matrix as a data container that takes element (i,j) and is implemented
 //by its constructors (copy, move) and operators that adds, subtracts, multiplies or treats reading/adding matrix elements.
 
 #include <iostream>
@@ -18,8 +18,8 @@ private:
 
 struct MatrixData{
 
-int rows;
-int cols;
+size_t rows;
+size_t cols;
 unique_ptr<T[]> MatrixPtr = nullptr;
 
 };
@@ -30,14 +30,14 @@ public:
 
 //Default constructor and destructor
 
-MatrixObject(int r, int c){
+MatrixObject(size_t r, size_t c){
 if(r <= 0 || c <= 0){
   throw invalid_argument("Invalid dimension.");  
 }
 else{
    data.rows = r;
    data.cols = c;
-   int number = data.rows*data.cols;
+   size_t number = data.rows*data.cols;
    data.MatrixPtr = make_unique<T[]>(number); 
 }       
 }
@@ -45,24 +45,49 @@ else{
 MatrixObject(const MatrixObject<T>& copied_mat){
 data.rows = copied_mat.data.rows;
 data.cols = copied_mat.data.cols;
-int number = data.rows*data.cols;
+size_t number = data.rows*data.cols;
 data.MatrixPtr = make_unique<T[]>(number);
 copy(copied_mat.data.MatrixPtr.get(),copied_mat.data.MatrixPtr.get() + number, data.MatrixPtr.get());
 
 }
 
-MatrixObject<T>& operator=(MatrixObject<T> copied_mat) noexcept{
+MatrixObject<T>& operator=(const MatrixObject<T>& copied_mat){
 
-swap(data.rows,copied_mat.data.rows);
-swap(data.cols,copied_mat.data.cols);
-swap(data.MatrixPtr,copied_mat.data.MatrixPtr);
+if(this != &copied_mat){
+   data.rows = copied_mat.data.rows;
+   data.cols = copied_mat.data.cols;
+   size_t number = data.rows*data.cols;
+   data.MatrixPtr = make_unique<T[]>(number);
+   copy(copied_mat.data.MatrixPtr.get(),copied_mat.data.MatrixPtr.get() + number, data.MatrixPtr.get());
+
+}
   
 return *this;    
 }
 
+MatrixObject(MatrixObject<T>&& copied_mat) noexcept{
+data.rows = copied_mat.data.rows;
+data.cols = copied_mat.data.cols;
+data.MatrixPtr = move(copied_mat.data.MatrixPtr);
+copied_mat.data.rows = 0;
+copied_mat.data.cols = 0;
+}
+
+MatrixObject<T>& operator=(MatrixObject<T>&& copied_mat) noexcept{
+if(this != &copied_mat){
+  data.rows = copied_mat.data.rows;
+  data.cols = copied_mat.data.cols;
+  data.MatrixPtr = move(copied_mat.data.MatrixPtr);
+  copied_mat.data.rows = 0;
+  copied_mat.data.cols = 0;
+ 
+}
+return *this;  
+}
+
 //Reading and writing element to a matrix
 
-T& operator()(int r, int c){
+T& operator()(const size_t& r,const size_t& c){
 if(r >= data.rows || r < 0 || c >= data.cols || c < 0){
   throw invalid_argument("Invalid element.");  
 }
@@ -71,7 +96,7 @@ else{
 }    
 }
 
-const T& operator()(int r, int c) const{
+const T& operator()(const size_t& r,const size_t& c) const{
 if(r >= data.rows || r < 0 || c >= data.cols || c < 0){
   throw invalid_argument("Invalid element.");  
 }
@@ -82,19 +107,19 @@ else{
 
 //Row and column getters
 
-const int getRows() const{
+const size_t getRows() const{
 return data.rows;    
 }
 
-const int getCols() const{
+const size_t getCols() const{
 return data.cols;    
 }
 
 //Print out the matrix if desired
 
 void print() const{
-for(int i = 0;i < data.rows;i++){
-    for(int j = 0;j < data.cols;j++){
+for(size_t i = 0;i < data.rows;i++){
+    for(size_t j = 0;j < data.cols;j++){
        cout << "Element (" << i << "," << j << "): " << (*this)(i,j) << "\n"; 
     }
 }        
@@ -106,8 +131,8 @@ MatrixObject<T> Transpose() const{
 
 MatrixObject<T> A_T(data.cols,data.rows);
 
-for(int i = 0;i < data.rows;i++){
-   for(int j = 0;j < data.cols;j++){
+for(size_t i = 0;i < data.rows;i++){
+   for(size_t j = 0;j < data.cols;j++){
       A_T(j,i) = (*this)(i,j);
    }    
 }
@@ -122,10 +147,10 @@ if(this->getCols() != A.getRows()){
   throw invalid_argument("The dimensions doesn't match.");  
 }
 else{
-   for(int i = 0;i < this->getRows();i++){
-   for(int j = 0;j < A.getCols();j++){
-      double summation = 0.0; 
-      for(int k = 0;k < this->getCols(); k++){
+   for(size_t i = 0;i < this->getRows();i++){
+   for(size_t j = 0;j < A.getCols();j++){
+      T summation = 0.0; 
+      for(size_t k = 0;k < this->getCols(); k++){
          summation += (*this)(i,k)*A(k,j);
       }
       B(i,j) = summation;
@@ -142,8 +167,8 @@ if(this->getRows() != A.getRows() && this->getCols() != A.getCols()){
   throw invalid_argument("The dimensions doesn't match.");  
 }
 else{
-   for(int i = 0;i < this->getRows();i++){
-   for(int j = 0;j < A.getCols();j++){
+   for(size_t i = 0;i < this->getRows();i++){
+   for(size_t j = 0;j < A.getCols();j++){
       B(i,j) = (*this)(i,j)+A(i,j);
    } 
 }
@@ -157,8 +182,8 @@ if(data.rows != A.getRows() && data.cols != A.getCols()){
   throw invalid_argument("The dimensions doesn't match.");  
 }
 else{
-   for(int i = 0;i < data.rows;i++){
-   for(int j = 0;j < A.getCols();j++){
+   for(size_t i = 0;i < data.rows;i++){
+   for(size_t j = 0;j < A.getCols();j++){
       B(i,j) = (*this)(i,j) - A(i,j);
    } 
 }
@@ -167,18 +192,6 @@ return B;
 }
 
 //A method that calculates the matrix element by a scalar value
-
-MatrixObject<T> scalarMatrix(const T& c)const{
-MatrixObject<T> B = *this;
-
-for(int i = 0;i < data.rows;i++){
-   for(int j = 0;j < data.cols;j++){
-      B(i,j) = c*B(i,j);
-   } 
-}
-
-return B;    
-}
 
 //Equality operator
 

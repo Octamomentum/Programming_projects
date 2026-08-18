@@ -1,6 +1,5 @@
 //This data structure is a linked list built in a node based logic that has copy/move assignment operators and
-//methods that can add or remove existing elements. Also, one can print its content and
-//retrieve its element on a certain index.
+//methods that can add or remove existing elements. One can also print the content of a list and retrieve values at a valid list index.
 
 #include <iostream>
 #include <stdexcept>
@@ -33,7 +32,8 @@ LinkedListObject(){};
 void clearList(){
 
 while(head != nullptr){
-    head = move(head -> next);
+    unique_ptr<Node> temp = move(head -> next);
+    head = move(temp);
 }
 tail = nullptr; 
 length = 0;
@@ -66,6 +66,17 @@ tail = currentCopy;
 
 }
 
+LinkedListObject<T>& operator=(const LinkedListObject<T>& original_list){
+
+if(this != &original_list){
+  LinkedListObject<T> temp(original_list);
+  swap(*this,temp); 
+}
+
+return *this;
+
+}
+
 //Move constructor and its assigned operator 
 
 LinkedListObject(LinkedListObject<T>&& original_list) noexcept{
@@ -81,15 +92,17 @@ original_list.length = 0;
 
 LinkedListObject<T>& operator=(LinkedListObject<T>&& original_list) noexcept{
 
-swap(head,original_list.head);
-swap(tail,original_list.tail);
-swap(length,original_list.length);
-   
+if(this != &original_list){
+  swap(head,original_list.head);
+  swap(tail,original_list.tail);
+  swap(length,original_list.length);
+}
+  
 return *this;
 
 }
 
-//Method that adds element to the list
+//Method that adds element to a list
 
 void addElement(const T& val){
 auto newNode = make_unique<Node>(val);
@@ -113,13 +126,15 @@ cout << "\nPrinting list content...\n";
 while(current != nullptr){
     cout << current -> data << "->";
     current = current -> next.get();
-}    
+}
+cout << "nullptr\n";    
 }
 
-//An operator that retrieves the element of a list if its exists, otherwise a runtime error
-//error is thrown
-
+//An operator that retrieves the element of a list at a certain index
 T& operator[](const int& ind) const{
+if(ind < 0){
+  throw runtime_error("Invalid index.");
+}
 if(head == nullptr){
    throw runtime_error("The list is empty, add elements."); 
 }
@@ -147,7 +162,8 @@ else if(ind < 0 || ind >= this -> getLength()){
 }
 else{
    if(ind == 0){
-     head = move(head -> next);
+    unique_ptr<Node> temp = move(head);
+     head = move(temp->next);
      length--;
      if(head == nullptr){
        tail = nullptr;
@@ -187,6 +203,7 @@ for(int i = 0;i < this->getLength();i++){
      return false;
    } 
 }
+
 return true;    
 }
 

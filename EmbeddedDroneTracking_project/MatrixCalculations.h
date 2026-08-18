@@ -1,33 +1,34 @@
 //This class performs matrix calculations which mainly focuses on linearly dependence, dot product and decompositions of a matrix
-//in order to solve a least square problem, especially LU/QR where the latter uses Givens rotation matrices. 
+//in order to solve a least square problem, that is QR which uses Givens rotation matrices. 
 
 #include "MatrixObject.h"
 #include <tuple>
 #include <iostream>
 #include <math.h>
 #include <cmath>
-#include <cstdlib>
 
 using namespace std;
 
-template <typename T, typename Ti>
+template <typename T>
 
 class MatrixCalculations{
 
 public:
 
-MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& R, const MatrixObject<T>& b)const {
+MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& R, const MatrixObject<T>& b) const {
+    MatrixObject<T> x(b.getRows(), b.getCols());
+    size_t n = b.getRows();
 
-MatrixObject<T> x(b.getRows(),b.getCols());
-for(int i = b.getRows()-1;i >= 0;i--){
-   T summation = 0.0;
-   for(int j = i;j < R.getCols();j++){
-      summation += R(i,j)*x(j,0);
-   } 
-   x(i,0) = (b(i,0) - summation)/R(i,i);
-}    
-    
-return x;    
+    for (size_t k = 0; k < n; k++) {
+        size_t i = n-1-k; 
+
+        T summation = static_cast<T>(0);
+        for (size_t j = i + 1; j < R.getCols(); j++) { 
+            summation += R(i, j) * x(j, 0);
+        } 
+        x(i, 0) = (b(i, 0) - summation) / R(i, i);
+    }
+    return x;    
 }
 
 T square(const T& x)const{
@@ -38,8 +39,8 @@ T L2Norm(const MatrixObject<T>& res_vec)const{
 
 T res = 0.0;
 
-for(int i = 0;i < res_vec.getRows();i++){
-   res += square(res_vec(i,res_vec.getCols()-1)); 
+for(size_t i = 0;i < res_vec.getRows();i++){
+   res += square(res_vec(i,0)); 
 }
 
 return sqrt(res);    
@@ -57,48 +58,43 @@ else{
 }
 }
 
-MatrixObject<T> generateIdentityMatrix(const Ti& n)const {
+MatrixObject<T> generateIdentityMatrix(const size_t& n)const {
 MatrixObject<T> A(n,n);
-for(int i = 0;i < A.getRows();i++){
+for(size_t i = 0;i < A.getRows();i++){
    A(i,i) = 1.0;
 }   
 return A;
 }
 
-auto QRDecomposition_GivensApproach(const MatrixObject<T>& A)const{
-const double eps = 1e-7;
-MatrixObject<T> R = A;
-MatrixObject<T> Q = generateIdentityMatrix(A.getRows());
-for(int j = 0;j < A.getCols();++j){
-   for(int i = j + 1;i < A.getRows();++i){
-      T val = R(i,j);
+auto QRDecomposition_GivensApproach(MatrixObject<T>& A,MatrixObject<T>& b)const{
+const T eps = 1e-7;
+for(size_t j = 0;j < A.getCols();++j){
+   for(size_t i = j + 1;i < A.getRows();++i){
+      T val = A(i,j);
       if(abs(val) > eps){
-        auto [c,s] = GivensParameters(R(j,j),R(i,j));
-        for(int k = j;k<A.getCols();++k){
-           double r_pivot = R(j,k);
-           double r_target = R(i,k);
-           R(j,k) = c*r_pivot + s*r_target;
-           R(i,k) = c*r_target - s*r_pivot; 
+        auto [c,s] = GivensParameters(A(j,j),A(i,j));
+        for(size_t k = j;k < 3;k++){
+           T R1 = c*A(j,k) + s*A(i,k);
+           T R2 = -s*A(j,k) + c*A(i,k);
+           A(j,k) = R1;
+           A(i,k) = R2;
         }
-         for(int k = 0;k < A.getRows();++k){
-           double q_pivot = Q(k,j);
-           double q_target = Q(k,i);
-           Q(k,j) = c*q_pivot + s*q_target;
-           Q(k,i) = c*q_target - s*q_pivot; 
-        }
+        T b1_tilde = c*b(j,0) + s*b(i,0);
+        T b2_tilde = -s*b(j,0) + c*b(i,0); 
+        b(j,0) = b1_tilde;
+        b(i,0) = b2_tilde;
       }
    }
 }
-return make_tuple(Q,R);   
 }
 
 auto generateTruncatedMatrices(const MatrixObject<T> & A, const MatrixObject<T>& b)const {
-int truncated_rows = min(A.getRows(),A.getCols());
+size_t truncated_rows = min(A.getRows(),A.getCols());
 MatrixObject<T> A_trunc(truncated_rows,A.getCols());
 MatrixObject<T> b_trunc(truncated_rows,b.getCols());
 
-for(int i = 0;i < A_trunc.getRows();i++){
-   for(int j = 0;j < A_trunc.getCols();j++){
+for(size_t i = 0;i < A_trunc.getRows();i++){
+   for(size_t j = 0;j < A_trunc.getCols();j++){
       A_trunc(i,j) = A(i,j);
    }
    b_trunc(i,b_trunc.getCols()-1) = b(i,b.getCols()-1);
@@ -107,14 +103,14 @@ for(int i = 0;i < A_trunc.getRows();i++){
 return make_tuple(A_trunc, b_trunc);
 }
 
-MatrixObject<T> LeastSquareSolver_QRDecomposition(const MatrixObject<T>& A, const MatrixObject<T>& b)const {
+MatrixObject<T> LeastSquareSolver_QRDecomposition(MatrixObject<T>& A, MatrixObject<T>& b)const {
 const double eps = 1e-7;
-auto [Q,R] = QRDecomposition_GivensApproach(A);
-MatrixObject<T> b_tilde = Q.Transpose()*b;
-
-auto [R_filtered,b_filtered] = generateTruncatedMatrices(R,b_tilde);
-
-return BackwardSubstitution(R_filtered,b_filtered);
+QRDecomposition_GivensApproach(A,b);
+auto [R_filtered,b_filtered] = generateTruncatedMatrices(A,b);
+R_filtered.print();
+b_filtered.print();
+MatrixObject<T> x = BackwardSubstitution(R_filtered,b_filtered);
+return x;
 }
 
 };
