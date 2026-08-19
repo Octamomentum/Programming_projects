@@ -1,5 +1,5 @@
-//This class performs matrix calculations which mainly focuses on linearly dependence, dot product and decompositions of a matrix
-//in order to solve a least square problem, that is QR which uses Givens rotation matrices. 
+//This class performs matrix calculations which mainly focuses on solving system of equations
+//using QR-decomposition which is performed by generating Givens rotation matrices. 
 
 #include "MatrixObject.h"
 #include <tuple>
@@ -14,6 +14,8 @@ template <typename T>
 class MatrixCalculations{
 
 public:
+
+//Solves a upper-triangular system of equations and returns a solution x
 
 MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& R, const MatrixObject<T>& b) const {
     MatrixObject<T> x(b.getRows(), b.getCols());
@@ -31,6 +33,8 @@ MatrixObject<T> BackwardSubstitution(const MatrixObject<T>& R, const MatrixObjec
     return x;    
 }
 
+//Square and L2 measure functions
+
 T square(const T& x)const{
 return x*x;
 }
@@ -46,6 +50,8 @@ for(size_t i = 0;i < res_vec.getRows();i++){
 return sqrt(res);    
 }
 
+//Calculates trigonometric terms cosinus and sinus needed for generate Givens rotations 
+
 auto GivensParameters(const T& r1,const T& r2) const { 
 T denum = sqrt(square(r1) + square(r2));
 if(denum == 0){
@@ -58,36 +64,37 @@ else{
 }
 }
 
-MatrixObject<T> generateIdentityMatrix(const size_t& n)const {
-MatrixObject<T> A(n,n);
-for(size_t i = 0;i < A.getRows();i++){
-   A(i,i) = 1.0;
-}   
-return A;
-}
+//QR decomposition of A using Givens approach, which return upper triangular matrix R
+//and vector b_tilde that is systematically calculated as Q^Tb, so Q is never needed to
+//calculate.
 
 auto QRDecomposition_GivensApproach(MatrixObject<T>& A,MatrixObject<T>& b)const{
+MatrixObject<T> R = A;
+MatrixObject<T> b_tilde = b;
 const T eps = 1e-7;
 for(size_t j = 0;j < A.getCols();++j){
    for(size_t i = j + 1;i < A.getRows();++i){
-      T val = A(i,j);
+      T val = R(i,j);
       if(abs(val) > eps){
-        auto [c,s] = GivensParameters(A(j,j),A(i,j));
+        auto [c,s] = GivensParameters(R(j,j),R(i,j));
         for(size_t k = j;k < 3;k++){
-           T R1 = c*A(j,k) + s*A(i,k);
-           T R2 = -s*A(j,k) + c*A(i,k);
-           A(j,k) = R1;
-           A(i,k) = R2;
+           T R1 = c*R(j,k) + s*R(i,k);
+           T R2 = -s*R(j,k) + c*R(i,k);
+           R(j,k) = R1;
+           R(i,k) = R2;
         }
-        T b1_tilde = c*b(j,0) + s*b(i,0);
-        T b2_tilde = -s*b(j,0) + c*b(i,0); 
-        b(j,0) = b1_tilde;
-        b(i,0) = b2_tilde;
+        T b1_tilde = c*b_tilde(j,0) + s*b_tilde(i,0);
+        T b2_tilde = -s*b_tilde(j,0) + c*b_tilde(i,0); 
+        b_tilde(j,0) = b1_tilde;
+        b_tilde(i,0) = b2_tilde;
       }
    }
 }
+return make_tuple(R,b_tilde);
 }
 
+//This method filtrates the rows of R and b_tilde so that the rows containing zeros of R
+//are discarded.
 auto generateTruncatedMatrices(const MatrixObject<T> & A, const MatrixObject<T>& b)const {
 size_t truncated_rows = min(A.getRows(),A.getCols());
 MatrixObject<T> A_trunc(truncated_rows,A.getCols());
@@ -103,14 +110,12 @@ for(size_t i = 0;i < A_trunc.getRows();i++){
 return make_tuple(A_trunc, b_trunc);
 }
 
+//Solver for the least square problems
 MatrixObject<T> LeastSquareSolver_QRDecomposition(MatrixObject<T>& A, MatrixObject<T>& b)const {
 const double eps = 1e-7;
-QRDecomposition_GivensApproach(A,b);
-auto [R_filtered,b_filtered] = generateTruncatedMatrices(A,b);
-R_filtered.print();
-b_filtered.print();
-MatrixObject<T> x = BackwardSubstitution(R_filtered,b_filtered);
-return x;
+auto [R,b_tilde] = QRDecomposition_GivensApproach(A,b);
+auto [R_filtered,btilde_filtered] = generateTruncatedMatrices(R,b_tilde);
+return BackwardSubstitution(R_filtered,btilde_filtered);
 }
 
 };
