@@ -7,10 +7,29 @@
 MatrixCalculations<double> matcalc;
 
 TEST(LeastSquare,StandardOperations){
+MatrixObject<double> J(4,3);
+double tau = 1e-2;
 double val = 0.5;
 EXPECT_DOUBLE_EQ(matcalc.square(val),0.25);
 MatrixObject<double> vec1(3,1);
 MatrixObject<double> vec2(3,1);
+
+J(0,0) = 0.0;
+J(0,1) = 1.0;
+J(0,2) = 2.0;
+J(1,0) = 1.0;
+J(1,1) = 2.0;
+J(1,2) = 1.0;
+J(2,0) = -1.0;
+J(2,1) = 1.0;
+J(2,2) = 1.0;
+J(3,0) = 0.0;
+J(3,1) = -2.0;
+J(3,2) = 0.0;
+
+double lambda = matcalc.initializeLambda(J,tau);
+EXPECT_DOUBLE_EQ(lambda,1e-1);
+
 
 vec1(0,0) = 1.0;
 vec1(1,0) = -2.0;
@@ -53,8 +72,8 @@ b(1,0) = 131.0;
 b(2,0) = 5.0;
 
 
-auto [R,b_tilde] = matcalc.QRDecomposition_GivensApproach(A,b,eps);
-auto [R_filtered,btilde_filtered] = matcalc.generateTruncatedMatrices(R,b_tilde,eps,lambda);
+auto [R,b_tilde,num_of_rotations] = matcalc.QRDecomposition_GivensApproach(A,b,eps);
+auto [R_filtered,btilde_filtered] = matcalc.generateTruncatedMatrices(R,b_tilde,lambda,false);
 MatrixObject<double> x_sol = matcalc.BackwardSubstitution(R_filtered,btilde_filtered);
 x_sol.print();
 }
@@ -76,7 +95,7 @@ A(2,1) = -1.0;
 b(0,0) = -1.0;
 b(1,0) = 1.0;
 b(2,0) = 0.0;
-auto [R,b_tilde] = matcalc.QRDecomposition_GivensApproach(A,b,eps);
+auto [R,b_tilde,num_of_rotations] = matcalc.QRDecomposition_GivensApproach(A,b,eps);
 
 MatrixObject<double> R_test(3,2);
 MatrixObject<double> btilde_test(3,1);
@@ -98,7 +117,7 @@ btilde_test(2,0) = 1.1547;
 EXPECT_EQ(R,R_test);
 EXPECT_EQ(b_tilde,btilde_test);
 
-auto [R_filtered,btilde_filtered] = matcalc.generateTruncatedMatrices(R,b_tilde,eps,lambda);
+auto [R_filtered,btilde_filtered] = matcalc.generateTruncatedMatrices(R,b_tilde,lambda,false);
 
 MatrixObject<double> Rfiltered_test(2,2);
 MatrixObject<double> btildefiltered_test(2,1);
@@ -154,11 +173,11 @@ x_init(0,0) = 7.0;
 x_init(1,0) = -8.0;
 x_init(2,0) = 10.0;
 
-auto [x_L2,b] = matcalc.LeastSquareSolver_GaussNewtonQR(L,x_ref,x_init,eps,lambda);
-std::cout << "\nSolution: \n";
-x_L2.print();
-std::cout << "\n Norm: " << matcalc.L2Norm(x_L2) << "\n";
-std::cout << "\nResidual distances relative to landmarks: \n";
-b.print();
-std::cout << "\n Norm: " << matcalc.L2Norm(b) << "\n";
+//auto [x,b,num_of_rotations] = matcalc.LeastSquareSolver_GN(L,x_ref,x_init,eps,lambda);
+//std::cout << "\nSolution: \n";
+//x_L2.print();
+//std::cout << "\n Norm: " << matcalc.L2Norm(x_L2) << "\n";
+//std::cout << "\nResidual distances relative to landmarks: \n";
+//b.print();
+//std::cout << "\n Norm: " << matcalc.L2Norm(b) << "\n";
 }

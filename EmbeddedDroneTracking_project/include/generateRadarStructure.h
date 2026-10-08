@@ -1,16 +1,16 @@
 /**
  * @file generateRadarStructure.h
  * @brief Construction of the radar environment covering landmark locations,
- *  sensor coordinates for assumed UAVs in the field, and their respective initial velocities.
+ *  sensor coordinates for assumed UAVs in the field.
  * 
  * - Underlying design: A method generating the radar is implemented by using pseudo-randomized seeds stored in matrix structures. 
- * To generate the environment, a radial radar is fixed to form the radar perimeter while other specified
- *  radial boundaries are set for the sensor coordinates.
+ * To generate the environment, a radius is fixed to form the radar perimeter while other specified
+ *  spherical boundaries are set for the sensor coordinates.
  * - Radar components: The landmark locations and the ground truth for the sensor coordinates are generated in the range of the 
  * radar following a spherical coordinate system that goes through the origin.
  * - Guessed coordinates: The initial guess for the coordinates are generated in a similar way as the ground truth except they 
  * can be placed either inside or outside the radar.  
- * -Initial velocities: For the number of UAVs, their initial velocities are stored in a matrix structure where each column corresponds one UAV.
+ * 
  * */ 
 
 #include "MatrixCalculations.h"
@@ -39,12 +39,15 @@ auto generateSeeds(const UAVTracking_parameters& uavParams)const{
 Matrix<size_t> lm_seed(uavParams.num_of_landmarks,1);
 Matrix<size_t> uav_truth_seed(uavParams.num_of_uavs,1);
 Matrix<size_t> uav_guess_seed(uavParams.num_of_uavs,1);
-Matrix<size_t> vel_seed(uavParams.num_of_uavs,1);
+Matrix<size_t> vel_uav_seed(uavParams.num_of_uavs,1);
+Matrix<size_t> vel_wind_seed(uavParams.num_of_uavs,1);
+
 
 std::mt19937 gen1(uavParams.landmark_seedvalue);
 std::mt19937 gen2(uavParams.uav_truth_seedvalue);
 std::mt19937 gen3(uavParams.uav_guess_seedvalue);
 std::mt19937 gen4(uavParams.initial_velocity_seedvalue);
+std::mt19937 gen5(uavParams.initial_wind_velocity_seedvalue);
 
 std::uniform_int_distribution<size_t> u_g(0,1e7);
 for(size_t i = 0; i < uavParams.num_of_landmarks;i++){
@@ -60,10 +63,14 @@ for(size_t i = 0; i < uavParams.num_of_uavs;i++){
 }
 
 for(size_t i = 0; i < uavParams.num_of_uavs;i++){
-   vel_seed(i,0) =  u_g(gen4);
+   vel_uav_seed(i,0) =  u_g(gen4);
 }
 
-return std::make_tuple(lm_seed,uav_truth_seed,uav_guess_seed,vel_seed);   
+for(size_t i = 0; i < uavParams.num_of_uavs;i++){
+   vel_wind_seed(i,0) =  u_g(gen5);
+}
+
+return std::make_tuple(lm_seed,uav_truth_seed,uav_guess_seed,vel_uav_seed,vel_wind_seed);   
 }
 
 //Generate the radar
@@ -162,48 +169,18 @@ else {
 return UAVGuess;   
 }
 
-//Generates initial velocity for a UAV
-Matrix<T> getUAVVelocity(const UAVTracking_parameters& uavParams, const size_t& heading_ind, const size_t& vel_seed)const{
-if(uavParams.max_velocity < 0){
-  throw std::invalid_argument("The radar system couldn't be constructed. Reason: Negative maximal velocity."); 
-}
-Matrix<T> vel_vec(3,1);
-std::uniform_real_distribution<T> unit_g(-1,1);
-std::uniform_real_distribution<T> u_g(0,uavParams.max_velocity);
-std::mt19937 gen(vel_seed+heading_ind); 
-
-for(size_t j = 0;j < 3;j++){
-  vel_vec(j,0) = unit_g(gen);
-  } 
-T vel = u_g(gen);
-T vel_length = matcalc.L2Norm(vel_vec);
-for(size_t j = 0;j < 3;j++){
-   vel_vec(j,0) = vel*(vel_vec(j,0)/vel_length);
-   }
-
-return vel_vec;   
-}
-
 //Construct the global world consisting of the radar and the guessed sensor coordinates
 auto generateGlobalEnvironment(const UAVTracking_parameters& uavParams)const{
 if(uavParams.uav_guess_seedvalue < 0 || uavParams.landmark_seedvalue < 0
-  || uavParams.initial_velocity_seedvalue < 0 || uavParams.uav_truth_seedvalue < 0){
+  || uavParams.initial_velocity_seedvalue < 0 || uavParams.initial_wind_velocity_seedvalue < 0 || uavParams.uav_truth_seedvalue < 0){
   throw std::invalid_argument("The radar system couldn't be constructed. Reason: Negative seed(s)."); 
 }
-auto [lm_seed,uav_truth_seed,uav_guess_seed,vel_seed] = generateSeeds(uavParams);
+auto [lm_seed,uav_truth_seed,uav_guess_seed,vel_uav_seed,vel_wind_seed] = generateSeeds(uavParams);
 auto [LandmarkMatrix, UAVTruth] = generateRadar(uavParams,lm_seed,uav_truth_seed);
 Matrix<T> UAVGuess = generateSensorCoordinates(uavParams,uav_guess_seed);
-Matrix<T> InitialVelocities(3,uavParams.num_of_uavs);
-
-//Store initial velocities for each UAV column-wise in a matrix structure 
-for(size_t i = 0; i<uavParams.num_of_uavs;i++){
-   Matrix<T> vel_init = getUAVVelocity(uavParams,0,vel_seed(i,0));
-   for(size_t j = 0;j < 3;j++){
-      InitialVelocities(j,i) = vel_init(j,0);
-   }
-}
 auto UAV = std::make_tuple(UAVTruth,UAVGuess);
-return std::make_tuple(LandmarkMatrix,UAV,InitialVelocities);
+auto Velocities = std::make_tuple(vel_uav_seed,vel_wind_seed);
+return std::make_tuple(LandmarkMatrix,UAV,Velocities);
 }
 
 

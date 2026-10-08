@@ -1,0 +1,4 @@
+C:/Programming_projects/EmbeddedDroneTracking_project/build/CMakeFiles/main_run.dir
+C:/Programming_projects/EmbeddedDroneTracking_project/build/CMakeFiles/run_tests.dir
+C:/Programming_projects/EmbeddedDroneTracking_project/build/CMakeFiles/edit_cache.dir
+C:/Programming_projects/EmbeddedDroneTracking_project/build/CMakeFiles/rebuild_cache.dir

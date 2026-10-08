@@ -195,6 +195,19 @@ return B;
 }
 }
 
+MatrixObject<T> Transpose()const{
+
+MatrixObject<T> A_T(data.cols,data.rows);
+
+for(size_t i = 0;i < data.rows;i++){
+   for(size_t j = 0;j < data.cols;j++){
+      A_T(j,i) = (*this)(i,j);
+   }
+}
+
+return A_T;
+}
+
 //Equal operator to check if two matrices have the same dimension and the same elements
 bool operator==(const MatrixObject<T>& A) const{
 if(this->getRows() != A.getRows() ||this -> getCols() != A.getCols()){
@@ -210,6 +223,24 @@ for(size_t i = 0;i < getRows();i++){
    }
 }
 return true;   
+}
+
+MatrixObject<T> getColumn(const size_t& column)const{
+MatrixObject<T> col_vec(this->getRows(),1);
+for(size_t i = 0;i < this->getRows();i++){
+   col_vec(i,0) = (*this)(i,column);
+}
+return col_vec;   
+}
+
+MatrixObject<T> scalarMultiplication(const T& alpha)const{
+MatrixObject<T> A(this->getRows(),this->getCols());
+for(size_t i = 0;i < this-> getRows();i++){
+   for(size_t j = 0;j < this->getCols();j++){
+      A(i,j) = alpha*(*this)(i,j);
+   }
+}
+return A;   
 }
 
 };

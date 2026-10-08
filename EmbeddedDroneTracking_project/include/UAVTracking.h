@@ -26,13 +26,14 @@
 #include <fstream>
 #include <tuple>
 #include <chrono>
+#include <random>
 
 template <typename T>
 using Matrix = MatrixObject<T>;
 template <typename T>
 using List = LinkedListObject<T>;
 template <typename T>
-using ListOfMatrices = LinkedListObject<MatrixObject<T>>;
+using ListOfMatrices = LinkedListObject<Matrix<T>>;
 
 template <typename T>
 class UAVTracking{
@@ -45,9 +46,31 @@ UAVTracking_parameters uavParams;
 
 public:
 
+//Generates velocity for either the UAV or the wind
+Matrix<T> getVelocity(const UAVTracking_parameters& uavParams, const size_t& vel_seed, const T& max_velocity)const{
+if(max_velocity < 0){
+  throw std::invalid_argument("The radar system couldn't be constructed. Reason: Negative maximal velocity."); 
+}
+Matrix<T> vel_vec(3,1);
+std::uniform_real_distribution<T> unit_g(-1,1);
+std::uniform_real_distribution<T> u_g(0,max_velocity);
+std::mt19937 gen(vel_seed); 
+
+for(size_t j = 0;j < 3;j++){
+  vel_vec(j,0) = unit_g(gen);
+  } 
+T vel = u_g(gen);
+T vel_length = matcalc.L2Norm(vel_vec);
+for(size_t j = 0;j < 3;j++){
+   vel_vec(j,0) = vel*(vel_vec(j,0)/vel_length);
+   }
+
+return vel_vec;   
+}
+
 //Steepest descent method by a first order kinematic
 //model described earlier that decides if the UAV should take a reverse movement or not in order to stay within the radar
-bool MovementDecision(const MatrixObject<T>& uav, const MatrixObject<T>& vel_vec)const{
+bool MovementDecision(const Matrix<T>& uav, const Matrix<T>& vel_vec)const{
 
 double A_term = matcalc.square(uavParams.h)*matcalc.square(matcalc.L2Norm(vel_vec));
 double B_term = 2*uavParams.h*matcalc.dot_product(uav,vel_vec);
@@ -69,32 +92,23 @@ return false;
 
 }
 
-// A method that checks the current flight heading for a UAV and performs the kinematic update
-void predictKinematicMovement(const UAVTracking_parameters& uavParams,Matrix<T>& UAVGuess,Matrix<T>& UAVTruth,
-    Matrix<T>& Velocities,size_t& flight_ind, const size_t& iter, const size_t& uav_ind)const{
-//Change flight heading
-      if(iter != 0 && iter % uavParams.change_heading == 0){
-        Matrix<T> vel_vec = radar.getUAVVelocity(uavParams,flight_ind,iter);
-        flight_ind++;
-        //Update velocity
-        for(size_t j = 0; j < 3;j++){
-           Velocities(j,uav_ind) = vel_vec(j,0);
-           }
-         }
-      MatrixObject<T> vel_vec(3,1);
+// A method that performs the kinematic prediction update
+void predictKinematicMovement(const UAVTracking_parameters& uavParams,Matrix<T>& UAVGuess,Matrix<T>& UAVTruth, Matrix<T>& UAVVelocity,
+    Matrix<T>& WindVelocity)const{
+   Matrix<T> vel_vec(3,1);
+   for(size_t i = 0;i < 3;i++){
+      vel_vec(i,0) = UAVVelocity(i,0) + WindVelocity(i,0);
+   }   
+   //This restricts the predicted update for the sensor coordinates from leaving the radar
+   if(!MovementDecision(UAVTruth,vel_vec)){
       for(size_t j = 0;j < 3;j++){
-         vel_vec(j,0) = Velocities(j,uav_ind);
+          vel_vec(j,0) = -vel_vec(j,0);
          }
-      //This restricts the predicted update for the sensor coordinates from leaving the radar
-      if(!MovementDecision(UAVTruth,Velocities)){
-         for(size_t j = 0;j < 3;j++){
-             Velocities(j,uav_ind) = -Velocities(j,uav_ind);
-          }
-       }
+      }
       
       for(size_t j = 0;j < 3;j++){
-         UAVTruth(j,0) += uavParams.h*Velocities(j,uav_ind); 
-         UAVGuess(j,0) += uavParams.h*Velocities(j,uav_ind);
+         UAVTruth(j,0) += uavParams.h*vel_vec(j,0); 
+         UAVGuess(j,0) += uavParams.h*vel_vec(j,0);
        }
 }
 
@@ -153,19 +167,48 @@ for(size_t j = 0;j < time_list.getLength();j++){
 csv_5.close();
 }
 
-//The radar system logic behind the UAV detection problem
-void TrackingMission_SensorCoordinates(const Matrix<T>& LandmarkMatrix,const std::tuple<Matrix<T>,Matrix<T>>& UAV,Matrix<T>& Velocities)const{
+//The modeled battery timer based on the number of Givens rotations and the velocity magnitude for the sought UAV
 
-//Used to generate a new flight in the kinematic prediction model
-size_t num_of_headings_counter = 1;
-MatrixObject<T> UAVTruth = std::get<0>(UAV);
-MatrixObject<T> UAVGuess = std::get<1>(UAV);
+void batteryTimer(Matrix<T>& battery, const size_t& uav_ind, const T& velocity_magnitude, const size_t& num_of_rotations)const{
+
+T drained_battery_in_procent = 0.0;
+T totNumber_of_rotations = 3*(uavParams.num_of_landmarks-3) + 3;
+
+T velocity_proportion = velocity_magnitude/uavParams.max_uav_velocity;
+
+drained_battery_in_procent += velocity_proportion;
+
+T portion_of_rotations = num_of_rotations/totNumber_of_rotations;
+
+drained_battery_in_procent += portion_of_rotations;
+
+battery(uav_ind,0) -= drained_battery_in_procent;
+
+for(size_t i = 0;i < uavParams.num_of_uavs;i++){
+   battery(i,0) -= uavParams.constant_drained_battery;
+}
+
+}
+
+//The radar system logic behind the UAV detection problem
+void TrackingMission_SensorCoordinates(const Matrix<T>& LandmarkMatrix,const std::tuple<Matrix<T>,Matrix<T>>& UAV,
+    const std::tuple<Matrix<size_t>,Matrix<size_t>>& velocitySeeds)const{
+Matrix<T> batteryMatrix(uavParams.num_of_uavs,1);
+Matrix<size_t> vel_uav_seed = std::get<0>(velocitySeeds);
+Matrix<size_t> vel_wind_seed = std::get<1>(velocitySeeds);
+for(size_t i = 0;i < uavParams.num_of_uavs;i++){
+   batteryMatrix(i,0) = 100.0;
+}
+
+Matrix<T> UAVTruth = std::get<0>(UAV);
+Matrix<T> UAVGuess = std::get<1>(UAV);
 
 std::cout << "\nMission started. Collecting radar data related to the locations of the UAVs...\n";
 
+bool stillSearching = true;
+bool outOfBattery = false;
  //For each UAV, solve the least square problem over a number of iterations and collect L2-norm of the solution and residual distances, elapsed time,
 //and the corresponding sensor coordinates
-bool stillSearching = true;
 T time_sum = 0.0;
 for(size_t i = 0;i < uavParams.num_of_uavs;i++){
   size_t iter = 0;
@@ -174,43 +217,52 @@ for(size_t i = 0;i < uavParams.num_of_uavs;i++){
 
   //Initialize the ground truth and the guessed sensor coordinates for the UAV.
 
-  MatrixObject<T> uav_g(3,1);
+  Matrix<T> uav_g(3,1);
   for(size_t j = 0;j < 3;j++){
       uav_g(j,0) = UAVGuess(j,i);  
      }
     
-   MatrixObject<T> uav_t(3,1);
+   Matrix<T> uav_t(3,1);
       for(size_t j = 0;j < 3;j++){
          uav_t(j,0) = UAVTruth(j,i);  
       }
   List<T> time_list;
   List<T> distResidual_list;
   List<T> L2error_list;
+  T lam = 0.0;
+  T ltp = uavParams.lambda_tuning_factor;
   while(stillSearching){
       std::cout << "\nIteration " << iter + 1 << "\n";
       auto t_start = std::chrono::steady_clock::now();
 
+      size_t vel_uav_val = vel_uav_seed(i,0) + iter;
+      size_t vel_wind_val = vel_wind_seed(i,0) + iter;
+
+      //Generate velocities
+      Matrix<T> vel_vec_uav = getVelocity(uavParams,vel_uav_val,uavParams.max_uav_velocity);
+      Matrix<T> vel_vec_wind = getVelocity(uavParams,vel_wind_val,uavParams.max_wind_velocity);
+
       //Perform kinematic prediction whether the moving UAV should make a reversed movement in the current flight or not
-      predictKinematicMovement(uavParams,uav_g,uav_t,Velocities,num_of_headings_counter, iter,i);
+      predictKinematicMovement(uavParams,uav_g,uav_t,vel_vec_uav,vel_vec_wind);
+      Matrix<T> vel_vec(3,1);
+      for(size_t j = 0;j < 3;j++){
+         vel_vec(j,0) = vel_vec_uav(j,0) + vel_vec_wind(j,0);
+      }
+      T vel_magnitude = matcalc.L2Norm(vel_vec);
      
       //Solve the least square problem
-      auto [dir_vec,b_filtered] = matcalc.LeastSquareSolver_GaussNewtonQR(LandmarkMatrix,uav_t,uav_g,uavParams.eps, uavParams.lambda);
-     
+      auto [uav_g_new,L2Norm_dir_vec,L2Norm_res,num_of_rotations,lambda] = matcalc.LeastSquareSolver_QRDecomposition(LandmarkMatrix,uav_t,uav_g,uavParams.eps, uavParams.tau, lam,
+          ltp, uavParams.activate_LM_method,iter);
+      uav_g = uav_g_new;
+      lam = lambda; 
       //Calculate the L2-norm for the direction vector
-      T norm_val = matcalc.L2Norm(dir_vec);
-    
-      std::cout << "\nNorm, UAV " << i+1 << ": " << norm_val << "\n";
-      L2error_list.addElement(norm_val);
-      for(int i = 0;i < 3;i++){
-      uav_g(i,0) += dir_vec(i,0);
-      }
-   
-      //Calculate L2-norm for the residual distances
-      T dist_val = matcalc.L2Norm(b_filtered);
-   
+      
+      std::cout << "\nNorm, UAV " << i+1 << ": " << std::abs(L2Norm_dir_vec) << "\n";
+      L2error_list.addElement(L2Norm_dir_vec);
+      
       UAVGuess_list.addElement(uav_g);
       UAVTruth_list.addElement(uav_t);
-      distResidual_list.addElement(dist_val);
+      distResidual_list.addElement(L2Norm_res);
    
       auto t_end = std::chrono::steady_clock::now();
       std::chrono::duration<T> elapsed_time = t_end-t_start;
@@ -218,11 +270,22 @@ for(size_t i = 0;i < uavParams.num_of_uavs;i++){
       time_list.addElement(elapsed_time.count());
    
       //Update the flag only if the norm is minimal, otherwise continue the mission
-      if(std::abs(norm_val) < uavParams.eps){
+      if(std::abs(L2Norm_dir_vec) < uavParams.eps){
          stillSearching = false;
       }      
-
-   iter += 1;
+      batteryTimer(batteryMatrix,i,vel_magnitude,num_of_rotations);
+      for(size_t j = 0;j < uavParams.num_of_uavs;j++){
+         std::cout << "\nBattery left for UAV " << j+1 << ": " << batteryMatrix(j,0) << "\n";
+         if(batteryMatrix(j,0) < uavParams.eps){
+            std::cout << "\nBattery ran out for UAV " << j+1 << "!\n";
+            outOfBattery = true;
+            break;   
+        }
+      }
+      if(outOfBattery){
+         throw std::runtime_error("Radar lost contact with the UAV. Reason: Out of battery.");
+        }
+      iter += 1;
 }
 std::cout << "\nNumber of iterations: " << iter << "\n";
 for(size_t j = 0;j < time_list.getLength();j++){
@@ -231,19 +294,19 @@ for(size_t j = 0;j < time_list.getLength();j++){
 
 //Print final results from the least square solver
 std::cout << "\nInitial Sensor coordinates for UAV, Ground Truth " << i+1 << ": \n";
-const MatrixObject<T>& uav_init_t = UAVTruth_list.getFirstElement();
+const Matrix<T>& uav_init_t = UAVTruth_list.getFirstElement();
 uav_init_t.print(); 
 
 std::cout << "\nInitial Sensor coordinates for UAV, Estimate " << i+1 << ": \n";
-const MatrixObject<T>& uav_init_guess = UAVGuess_list.getFirstElement();
+const Matrix<T>& uav_init_guess = UAVGuess_list.getFirstElement();
 uav_init_guess.print(); 
 
 std::cout << "\nSensor coordinates for UAV, Ground Truth " << i+1 << ": \n";
-const MatrixObject<T>& uav_final_t = UAVTruth_list.getLastElement();
+const Matrix<T>& uav_final_t = UAVTruth_list.getLastElement();
 uav_final_t.print(); 
 
 std::cout << "\nSensor coordinates for UAV, Estimate " << i+1 << ": \n";
-const MatrixObject<T>& uav_final_guess = UAVGuess_list.getLastElement();
+const Matrix<T>& uav_final_guess = UAVGuess_list.getLastElement();
 uav_final_guess.print(); 
 
 //Checks if the converged solution for the UAV is stable.
@@ -263,15 +326,15 @@ std::cout << "\n Total elapsed time for finding " << uavParams.num_of_uavs << " 
 //The main method that constructs the radar environment and calls the UAV tracking solver
 //in order to solve the dynamic detection problem and write results to csv-files
 
-void UAVTracking_Solver(const UAVTracking_parameters uavParams)const{
+void UAVTracking_Solver(const UAVTracking_parameters& uavParams)const{
 //Checks if the necessary parameters are non-negative
-if(uavParams.h < 0 || uavParams.eps < 0 || uavParams.lambda < 0 || uavParams.change_heading <= 0){
+if(uavParams.h < 0 || uavParams.eps < 0 || uavParams.tau < 0){
   throw std::invalid_argument("The mission couldn't start. Reason: Negative value(s) for h, epsilion or lambda.");
 }
 std::cout << "\nWelcome to the Single-Targeted UAV Tracking program, STUT. The radar system will gather information about the sensor coordinates of "
  << uavParams.num_of_uavs << " UAVs.\n"; 
-auto [LandmarkMatrix,UAV,Velocities] = radar.generateGlobalEnvironment(uavParams);
-TrackingMission_SensorCoordinates(LandmarkMatrix,UAV,Velocities);
+auto [LandmarkMatrix,UAV,VelocitySeeds] = radar.generateGlobalEnvironment(uavParams);
+TrackingMission_SensorCoordinates(LandmarkMatrix,UAV,VelocitySeeds);
 }
 
 };
