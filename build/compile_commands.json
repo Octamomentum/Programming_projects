@@ -1,0 +1,38 @@
+[
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\main_run.dir\\src\\main_UAVTracking.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\src\\main_UAVTracking.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/src/main_UAVTracking.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/main_run.dir/src/main_UAVTracking.cpp.obj"
+},
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -DGTEST_LINKED_AS_SHARED_LIBRARY=1 -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\run_tests.dir\\tests\\test_LinkedListObject.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\tests\\test_LinkedListObject.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/tests/test_LinkedListObject.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/run_tests.dir/tests/test_LinkedListObject.cpp.obj"
+},
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -DGTEST_LINKED_AS_SHARED_LIBRARY=1 -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\run_tests.dir\\tests\\test_MatrixCalculations.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\tests\\test_MatrixCalculations.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/tests/test_MatrixCalculations.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/run_tests.dir/tests/test_MatrixCalculations.cpp.obj"
+},
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -DGTEST_LINKED_AS_SHARED_LIBRARY=1 -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\run_tests.dir\\tests\\test_MatrixObject.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\tests\\test_MatrixObject.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/tests/test_MatrixObject.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/run_tests.dir/tests/test_MatrixObject.cpp.obj"
+},
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -DGTEST_LINKED_AS_SHARED_LIBRARY=1 -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\run_tests.dir\\tests\\test_RadarSystem.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\tests\\test_RadarSystem.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/tests/test_RadarSystem.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/run_tests.dir/tests/test_RadarSystem.cpp.obj"
+},
+{
+  "directory": "C:/Programming_projects/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\c++.exe -DGTEST_LINKED_AS_SHARED_LIBRARY=1 -IC:/Programming_projects/EmbeddedDroneTracking_project/include -g -std=gnu++17 -Wall -Wextra -Wpedantic -Werror -o CMakeFiles\\run_tests.dir\\tests\\test_UAVTracking.cpp.obj -c C:\\Programming_projects\\EmbeddedDroneTracking_project\\tests\\test_UAVTracking.cpp",
+  "file": "C:/Programming_projects/EmbeddedDroneTracking_project/tests/test_UAVTracking.cpp",
+  "output": "C:/Programming_projects/build/CMakeFiles/run_tests.dir/tests/test_UAVTracking.cpp.obj"
+}
+]

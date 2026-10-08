@@ -13,6 +13,11 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./SingleTargetUAVTracking_project
+
 
     steps:
       - name: Checkout Code

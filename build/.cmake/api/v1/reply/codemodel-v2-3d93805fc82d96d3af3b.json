@@ -1,0 +1,141 @@
+{
+	"configurations" : 
+	[
+		{
+			"abstractTargets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::GTest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__GTest-Debug-21f1937dabf885258cbd.json",
+					"name" : "GTest::GTest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::Main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__Main-Debug-4d4729edd5d3a12de236.json",
+					"name" : "GTest::Main",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::gmock::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__gmock-Debug-98e3bdf65885313fb049.json",
+					"name" : "GTest::gmock",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::gmock_main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__gmock_main-Debug-2368ff2437b233155ee3.json",
+					"name" : "GTest::gmock_main",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::gtest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__gtest-Debug-6dab3e2ae0e6fa4b41b6.json",
+					"name" : "GTest::gtest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "GTest::gtest_main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-GTest__gtest_main-Debug-d315c7c502231ea64fb5.json",
+					"name" : "GTest::gtest_main",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "UAVFramework::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-UAVFramework-Debug-3deb2d54d10fe052ea81.json",
+					"name" : "UAVFramework",
+					"projectIndex" : 0
+				}
+			],
+			"directories" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-b5805d5c08fd3d92def4.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "UAV_Tracking",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "main_run::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-main_run-Debug-caa4e3674f1467ed3c20.json",
+					"name" : "main_run",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "run_tests::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-run_tests-Debug-5a51cbc80d03cf9dc5cd.json",
+					"name" : "run_tests",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Programming_projects/build",
+		"source" : "C:/Programming_projects/EmbeddedDroneTracking_project"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 11
+	}
+}
