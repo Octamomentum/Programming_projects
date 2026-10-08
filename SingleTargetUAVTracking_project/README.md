@@ -1,1 +1,0 @@
-# STUT Project Build Verification
