@@ -1,17 +1,20 @@
 name: STUT CI Pipeline
 
-on: 
+on:
   push:
-    branches: ["main", "master"]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: ["main", "master"]
+    branches:
+      - main
+      - master
 
-# FIXED: Changed "job" to plural "jobs"
-jobs: 
+jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    steps: 
+    steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         
@@ -26,7 +29,6 @@ jobs:
       - name: Build Code
         run: cmake --build build
             
-      # FIXED: Corrected indentation for working-directory and run
       - name: Run GoogleTest Suite
         working-directory: build
         run: ctest --output-on-failure
