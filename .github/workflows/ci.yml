@@ -16,7 +16,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./SingleTargetUAVTracking_project
+        working-directory: ./UAVTracking_project
 
 
     steps:
