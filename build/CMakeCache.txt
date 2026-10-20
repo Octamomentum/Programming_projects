@@ -232,7 +232,7 @@ UAV_Tracking_BINARY_DIR:STATIC=C:/Programming_projects/build
 UAV_Tracking_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-UAV_Tracking_SOURCE_DIR:STATIC=C:/Programming_projects/EmbeddedDroneTracking_project
+UAV_Tracking_SOURCE_DIR:STATIC=C:/Programming_projects/SingleTargetUAVTracking_project
 
 
 ########################
