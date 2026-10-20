@@ -11,7 +11,7 @@
 #include "MatrixCalculations.h"
 #include "GaussNewton.h"
 #include "LevenbergMarquardt.h"
-#include "Kalmanfilter.h"
+#include "KalmanFilter.h"
 #include "TrackingParameters.h"
 
 template <typename T>
