@@ -21,7 +21,7 @@ vel_vec(0,0) = 1/std::sqrt(2);
 vel_vec(1,0) = 1/std::sqrt(2);
 vel_vec(2,0) = 0.0;
 
-bool MakeAReverseMovement = phys_const.MovementDecision(uavParams,uav,vel_vec);
-EXPECT_TRUE(MakeAReverseMovement == false);
+bool MakeAForwardMovement = phys_const.MovementDecision(uavParams,uav,vel_vec);
+EXPECT_TRUE(MakeAForwardMovement == false);
 
 }

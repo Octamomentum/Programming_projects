@@ -106,12 +106,12 @@ auto GenerateMatrixData(const UAVTracking_parameters& uavParams, const TrackingP
 
 Matrix<size_t> VarianceSeed = std::get<0>(varianceParams);
 size_t iter = std::get<1>(varianceParams);
-//Initialize a block matrix whose diagonal elements will consist of Jacobian relating to each UAV position
+//Initialize a block matrix whose diagonal elements will consist of Jacobian relating to each UAV
 size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
 size_t n = 3*uavParams.dimension.num_of_uavs;
 Matrix<T> J(m,n);
 Matrix<T> r(m,1);
-//For each UAV position, calculate Jacobian and residuals
+//For each UAV, calculate Jacobian and residuals
 for(size_t uav_ind = 0;uav_ind < uavParams.dimension.num_of_uavs;uav_ind++){
   Matrix<T> uav_truth(3,1);
   Matrix<T> uav_guess(3,1);

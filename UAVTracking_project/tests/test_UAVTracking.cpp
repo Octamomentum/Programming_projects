@@ -32,6 +32,7 @@ uavParams.est.beta = 0.5;
 uavParams.est.c_param = 1.0;
 uavParams.est.lambda_threshold = 1.2;
 uavParams.est.rho_threshold = 3.0;
+uavParams.posParams.maximal_offset = 2.0;
 uavParams.variance.variance_distances = -31.0;
 EXPECT_THROW({uav_tracking.UAVTracking_Solver(uavParams);},std::invalid_argument);
 }
@@ -48,6 +49,7 @@ uavParams.est.beta = 0.5;
 uavParams.est.c_param = 1.0;
 uavParams.est.lambda_threshold = 1.2;
 uavParams.est.rho_threshold = 3.0;
+uavParams.posParams.maximal_offset = 2.0;
 uavParams.variance.variance_distances = 31.0;
 uavParams.options.activate_method = "L-BFGS";
 EXPECT_THROW({uav_tracking.UAVTracking_Solver(uavParams);},std::invalid_argument);

@@ -1,4 +1,4 @@
-name: STUT CI Pipeline
+name: UAV Tracking CI Pipeline
 
 on:
   push:

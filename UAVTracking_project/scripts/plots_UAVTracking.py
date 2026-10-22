@@ -6,12 +6,6 @@ import subprocess
 
 subprocess.run(["../run_main.exe"],check="True")
 
-#Needed parameters for plots
-num_of_landmarks = 1e2
-variance = 1e-2
-radar_radius = 1e3
-guess_radius = 1e7
-
 #First file is data for the L2-measure of the directional derivative
 GNnoWGNdata_L2 = np.loadtxt("../output_data/L2Convergence_GN,NoWGN.csv",delimiter=",",skiprows=1)
 GNnoWGNdata_iter = GNnoWGNdata_L2[:,0]
@@ -37,7 +31,6 @@ KFnoWGNdata_L2Error = KFnoWGNdata_L2[:,1]
 KFWGNdata_L2 = np.loadtxt("../output_data/L2Convergence_KALMANFILTER,WGN.csv",delimiter=",",skiprows=1)
 KFWGNdata_iter = KFWGNdata_L2[:,0]
 KFWGNdata_L2Error = KFWGNdata_L2[:,1]
-
 
 
 plt.suptitle(rf"L2 Convergence solution: $10^2$ Landmarks, $r_{{radar}} = 10^3, r_{{guess}} = 10^7$", fontsize=12, fontweight='bold')
