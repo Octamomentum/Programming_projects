@@ -106,7 +106,7 @@ else{
 size_t num_of_iterations = L2Norm_ResList.getLength();
 
 //Write L2-measures of the directional derivative over states to csv-file
-std::ofstream csv_1 ("output_data/L2Convergence_" + method + "," + noiseAnswer + ".csv");
+std::ofstream csv_1 ("../output_data/L2Convergence_" + method + "," + noiseAnswer + ".csv");
 csv_1 << "Iterations," << "L2Error\n";
 for(size_t j = 0;j < num_of_iterations;j++){
    csv_1 << j+1 << "," << L2Norm_SolList[j] << "\n";  
@@ -114,7 +114,7 @@ for(size_t j = 0;j < num_of_iterations;j++){
 csv_1.close();
 
 //Write L2-measures of the residual distances over states to csv-file
-std::ofstream csv_2 ("output_data/ResidualErrorConvergence_" + method + "," + noiseAnswer + ".csv");
+std::ofstream csv_2 ("../output_data/ResidualErrorConvergence_" + method + "," + noiseAnswer + ".csv");
 csv_2 << "Iterations," << "ResidualError\n";
 for(size_t j = 0;j < num_of_iterations;j++){
    csv_2 << j+1 << "," << L2Norm_ResList[j] << "\n";
@@ -123,7 +123,7 @@ for(size_t j = 0;j < num_of_iterations;j++){
 csv_2.close();
 
 //Write the moving ground truth UAV sensor coordinates over states per UAV to csv-file
-std::ofstream csv_3 ("output_data/MovingUAV_" + method + "," + noiseAnswer + ".csv");
+std::ofstream csv_3 ("../output_data/MovingUAV_" + method + "," + noiseAnswer + ".csv");
 csv_3 << "Iterations, ";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    csv_3 << "TrueCoord1_UAV" << i << ",TrueCoord2_UAV" << i <<",TrueCoord3_UAV" << i;
@@ -147,7 +147,7 @@ csv_3 << "\n";
 csv_3.close();
 
 //Write estimate of the UAV sensor coordinates over states per UAV to csv-file
-std::ofstream csv_4 ("output_data/UAVConvergence_" + method + "," + noiseAnswer + ".csv");
+std::ofstream csv_4 ("../output_data/UAVConvergence_" + method + "," + noiseAnswer + ".csv");
 csv_4 << "Iterations, ";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    csv_4 << "EstimateCoord1_UAV" << i << ",EstimateCoord2_UAV" << i <<",EstimateCoord3_UAV" << i;
@@ -171,7 +171,7 @@ csv_4 << "\n";
 csv_4.close();
 
 //Write elapsed time for solving a least square problem over states to csv-file
-std::ofstream csv_5 ("output_data/ElapsedTime_" + method + "," + noiseAnswer + ".csv");
+std::ofstream csv_5 ("../output_data/ElapsedTime_" + method + "," + noiseAnswer + ".csv");
 csv_5 << "Iterations, Time\n";
 for(size_t j = 0;j < num_of_iterations;j++){
    csv_5 << j+1 << "," << time_list[j] << "\n";

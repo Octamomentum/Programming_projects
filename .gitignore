@@ -8,7 +8,4 @@ __pycache__/
 CMakeCache.txt
 CMakeFiles/
 /.vscode
-/build 
-/build1
-/build2
-/build_local
+build/ 

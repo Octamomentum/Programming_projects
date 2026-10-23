@@ -61,6 +61,7 @@ Designed for kinematic movement prediction.
 ### GenerateWGNSource
 
 Responsible for the generation of potential noisy sensor data sources for true distances of the moving UAVs relative to landmark locations, using White Gaussian Noise. It is designed for choosing the option to either generate the noisy data or to keep the UAV Tracking problem ideal.
+
 ### TrackingParameters
 
 Stores and manages tracking-related data between states. 
@@ -77,7 +78,7 @@ Responsible for state estimation using the Gauss-Newton strategy.
 
 Responsible for state estimation using the Levenberg-Marquardt strategy.
 
-### Kalmanfilter
+### KalmanFilter
 
 Responsible for state estimation using Kalman filtering techniques.
 
@@ -97,17 +98,42 @@ The main class that initializes a radar environment generated from generateRadar
 
 Represents the needed parameters for the UAV Tracking problem.
 
+### main_UAVTracking
+
+The main source file for running the UAV Tracking solver via MissionUAV_Solver.
+
 ### plots_UAVTracking
 
-A script in Python that uses data processing pipeline to visualize the estimated results from UAVTracking.
+A script in Python that uses a data processing pipeline to automatically build and execute the project, and subsequently generate plots from the UAV Tracking solver results.
 
 ### Test Suites
 
 Verification framework based on GoogleTest.
 
+## Usage
+
+### Clone the repository
+
+- git clone https://github.com/Octamomentum/Programming_projects
+- cd UAVTracking_project
+
+### Create a build folder and configure the project:
+
+- mkdir build
+- cd build
+- cmake ..
+
+### Run the Python visualization pipeline
+
+Since the Python script automatically builds and executes the project, it is sufficient to run
+
+- python plots_UAVTracking.py
+
+The script generates the simulation results and visualizes the estimation performance and the estimated UAV trajectories.
+
 ## Mathematical Background
 
-The UAV Tracking (UT) problem is formulated as a dynamical data assimilation problem. 
+The UAV Tracking (UT) problem is formulated as a dynamic data assimilation problem. 
 
 The radar environment follows a spherical coordinate system centered at the origin.
 

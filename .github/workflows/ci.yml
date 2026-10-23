@@ -14,26 +14,34 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
+    # This ensures EVERY step automatically runs inside your project subfolder
     defaults:
       run:
         working-directory: ./UAVTracking_project
-
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         
-      - name: Install GoogleTest and Compiler Dependencies
+      # Install compiler and GTest directly onto the system
+      - name: Install Compiler and GTest Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake libgtest-dev
-            
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+          sudo apt-get install -y build-essential cmake libgtest-dev google-mock
 
+      # Force clean any bad local runner caches
+      - name: Fresh Build Clean
+        run: rm -rf build
+
+      # Configure CMake relative to the active working directory ('.')
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      # Build the project using the newly created build folder
       - name: Build Code
         run: cmake --build build
             
+      # Run the tests from inside the correct build folder path
       - name: Run GoogleTest Suite
-        working-directory: build
+        working-directory: ./UAVTracking_project/build
         run: ctest --output-on-failure

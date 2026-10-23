@@ -4,6 +4,8 @@ project(UAV_Tracking LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+enable_testing()
+
 add_library(UAVFramework INTERFACE)
 target_include_directories(UAVFramework INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
@@ -23,6 +25,7 @@ file(GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
 
 add_executable(run_tests ${TEST_SOURCES})
 target_link_libraries(run_tests PRIVATE UAVFramework GTest::gtest_main)
+add_test(NAME AllUAVTests COMMAND run_tests)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
   target_compile_options(run_tests PRIVATE -fsanitize=address)
