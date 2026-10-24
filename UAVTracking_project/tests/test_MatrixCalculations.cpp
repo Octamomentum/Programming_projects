@@ -99,7 +99,7 @@ EXPECT_EQ(test_matrix,matrix);
 }
 
 TEST(LeastSquare,QRExample){
-//A general example solving a least square problem using the Gauss-Newton idea
+//A general example solving a least square problem based on QR-decomposition
 MatrixObject<double> A(3,2);
 MatrixObject<double> b(3,1);
 UAVTracking_parameters uavParams;

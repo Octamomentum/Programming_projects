@@ -1,4 +1,4 @@
-//Testing the functionality from UAVTracking.h
+//Testing the functionality from PhysicalConstraints.h
 #include <gtest/gtest.h>
 #include "PhysicalConstraints.h"
 
@@ -6,7 +6,7 @@ PhysicalConstraints <double> phys_const;
 UAVTracking_parameters uavParams;
 
 TEST(KinematicPrediction,TestExample){
-//Testing the kinematic prediction for a fleet of one UAV given a velocity
+//Testing the kinematic prediction for one UAV given a velocity
 UAVTracking_parameters uavParams; 
 uavParams.dynamical_UAV_params.h = 1e-1;
 uavParams.posParams.radar_radius = 4.0;

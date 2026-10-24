@@ -1,8 +1,8 @@
 # UAV Tracking
 
-This project implements a modular object-oriented radar system in C++ for detection and tracking of moving UAVs.
+This project implements a modular object-oriented radar system in C++ for estimating and tracking UAV coordinates.
 
-The project models UAV tracking as a dynamic data assimilation problem using a generated radar environment consisting of landmark locations and UAV coordinates. 
+The project models UAV tracking as a dynamic data assimilation problem using a generated radar environment consisting of landmark locations and UAV coordinates. The UAVs are assumed to be moving and isolated within the monitored environment where radar measurements are available. Thus, the implemented methods address a numerical state-estimation and tracking problem rather than a detection problem.
 
 The radar system was developed as an independent R&D project with focus on:
 
@@ -37,6 +37,7 @@ The project includes:
 - GoogleTest unit testing
 - AddressSanitizer verification
 - Data processing and visualization pipeline in Python
+- Continuous Integration framework via GitHub Actions
 
 ## Software Architecture
 
@@ -60,7 +61,7 @@ Designed for kinematic movement prediction.
 
 ### GenerateWGNSource
 
-Responsible for the generation of potential noisy sensor data sources for true distances of the moving UAVs relative to landmark locations, using White Gaussian Noise. It is designed for choosing the option to either generate the noisy data or to keep the UAV Tracking problem ideal.
+Responsible for the generation of potential noisy sensor data sources to true distances of the moving UAVs relative to landmark locations, using White Gaussian Noise. It is designed for choosing the option to either generate the noisy data or to keep the UAV Tracking problem ideal.
 
 ### TrackingParameters
 
@@ -133,13 +134,13 @@ The script generates the simulation results and visualizes the estimation perfor
 
 ## Mathematical Background
 
-The UAV Tracking (UT) problem is formulated as a dynamic data assimilation problem. 
+The UAV Tracking (UT) problem is formulated as a dynamic data assimilation problem. The UAVs are assumed to be mutually independent, meaning that there are no interactions, communications or coupling between the tracked targets that are taken into consideration.
 
-The radar environment follows a spherical coordinate system centered at the origin.
+The radar environment follows a spherical coordinate system centered at the origin. The ground truth UAV positions and the landmark locations remain within the monitored radar domain while initial UAV estimates may be generated either inside or outside the radar environment.
 
 Radar observations are either ideal or affected by potential noisy data sources using White Gaussian Noise to generate real-world sensor uncertainty  relating to true distances of the UAV positions relative to landmark locations. 
 
-Estimated positions are calculated through nonlinear least-squares optimization using an implemented numerical estimation method strategy: Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering techniques.
+Estimated positions are calculated through nonlinear least-squares optimization using an implemented numerical estimation method strategy: Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering techniques. 
 
 The goal of this mathematical framework is to study estimation performance behavior under real-world physical constraints.
 
@@ -149,7 +150,7 @@ This project was verified using:
 
 - Unit tests implemented with GoogleTest
 - Dynamic memory analysis using AddressSanitizer
-- GitHub Actions via a Continuous Integration (CI) framework
+- Continuous Integration (CI) framework via GitHub Actions
 - Validation of estimation results through numerical experiments
 
 The project has been continuously tested during development to ensure robust and efficient software architecture. 
@@ -162,10 +163,10 @@ The results show that:
 
 - The estimator performs reliably under the ideal case. In the uncertainty case, however, the reliability tends to decrease as the noise level increases with respect to the variance relating to the true distances of the UAV positions relative to landmark locations. 
 - Strong wind disturbances and higher UAV velocity magnitudes increase the risk of numerical instability.
-- The Gauss-Newton method remains effective when provided with initial guesses that are reasonably far from the moving UAVs in the radar. 
-- The Levenberg-Marquardt method provided a robust performance based on the Trust-Region approach, tending to converge to the same solution and residual sequence as Gauss-Newton in the ideal case.
-- The Kalman filtering method demonstrated the most improved convergence under challenging initialization scenarios and reduced observation sets when sufficiently calibrated. However, divergence may occur for poorly calibrated covariance matrices or strongly overdetermined situations with extreme initialization distances.
-- In the uncertainty case, when provided with an additional stop criterion when the absolute error between the previous and current step L2-norm is sufficiently small, all methods converge physically in a neighborhood around the moving UAVs. 
+- The Gauss-Newton method remains effective when provided with initial UAV estimates that are reasonably far from the moving UAVs in the radar. 
+- The Levenberg-Marquardt method provided a robust performance based on the Trust-Region approach, tending to converge earlier than the Gauss-Newton method when the least square problems are sufficiently regularized.
+- The Kalman filtering method demonstrated reliable and robust performance, although at a higher computational cost when provided with properly calibrated covariance matrices P, Q and R, and when the noise level increases. Depending on the covariance calibration and the filter tuning, the Kalman filtering method tends to outperform the Gauss-Newton method yet has potential to be as effective as Levenberg-Marquardt in convergence. For extremely large distances from the radar origin, Kalman filtering may provide the most robust estimation strategy.
+- In the uncertainty case, when provided with an additional stop criterion when the absolute error between the previous and current step L2-norm is sufficiently small, all methods converge physically in a neighborhood around the moving UAVs in the monitored radar domain. 
 
 ##  Future Improvements
 
@@ -197,10 +198,9 @@ The project was developed using:
 - Nonlinear Least-Squares Optimization
 - Block/Augmented/Projection matrices
 - QR-decomposition
-- Givens Matrices
-- Tikhonov Regularization for the Kalman filtering method
+- Givens matrices
+- Covariance-based Uncertainty modelling for the Kalman-filtering method
 - Line Search (for the kinematic UAV movement prediction)
-- Armijo conditioned line search for the numerical estimations
 
 ### Mathematical Concepts
 

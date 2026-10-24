@@ -1,6 +1,6 @@
 /**
  * @file MatrixObject.h
- * @brief Flat 1d-array using smart pointers, to handle efficient memory management.
+ * @brief Flat 1d-array using smart pointers to handle efficient memory management.
  * Copy constructors and assignment operators perform explicit deep copies of existing matrices via copy to ensure full pointer management,
  * while move constructors and assignment operators use move to perform move operations of existing matrices.
  *  Additionally, operators such as multiplication, addition and subtraction are implemented to perform matrix calculations in the other header files.

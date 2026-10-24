@@ -2,24 +2,25 @@
  * @file UAVTracking.h
  * @brief Radar System Application involving 3D Estimation for moving UAVs and Dynamic Data Assimilation.
  * 
- * Goal: The main objective is to track and estimate sensor coordinates relating to moving UAVs in a radar environment
- *  w.r.t. to a dynamic data assimilation aspect, where a numerical estimation method strategy is used 
- * to minimize the L2-measures of residual distances relative to the landmarks in the field. The radar system
- *  collects valuable information about L2-measured norms for directional derivative/residuals 
+ * Goal: The main objective is to track and estimate coordinates of isolated moving UAVs in a generated radar environment
+ * by using a numerical estimation strategy to minimize the L2-measures of residual distances relative to the landmarks in the monitored radar domain.
+ *  The radar system collects valuable information about L2-measured norms for step solution/residuals 
  * and estimated UAV coordinates. Once the strategy has successfully converged, the results are plotted later in Python.
  
  * System setup: 
- * - Initialization parameters: Landmark locations, ground truth knowledge about the UAV sensor coordinates, and initial guess for the UAV sensor coordinates
- * are all determined in a spherical coordinate system using fixed pseudo-random seeds.
- * - Boundaries: The landmarks and the UAV sensor coordinates relative to the ground truth knowledge, are generated in a fixed radar radius range, while
- * the UAV sensor coordinates relative to the initial guess, are able to be generated outside or inside the radar.
- * - Kinematic profile: As the UAVs are moving in the field, the objective navigates the movement for the UAV along local velocity vectors
+ * - Initialization parameters: Landmark locations, ground truth knowledge about the UAV coordinates, and initial UAV guesses
+ * are all determined in a spherical coordinate system centered at the origin, using fixed pseudo-random seeds.
+ * - Boundaries: The landmarks and the ground truth UAV coordinates are generated within a fixed radar radius range, while
+ * the initial UAV guesses may be generated either outside or inside the radar environment.
+ * - Kinematic profile: As the UAVs are moving in the field, the objective navigates the UAV movement along local velocity vectors
  *  that changes over states. In this movement, each update is predicted with an explicit step-size h, to then 
- * solve a least square problem using the G-N (or Levenberg-Marquardt or an approach using Kalman filtering techniques)
- *  method. The kinematic model is first-order by the formula x_{k+1} = x_{k} + h*v_{k}
+ * solve a least-squares problem using the G-N (or Levenberg-Marquardt or an approach using Kalman filtering techniques)
+ *  strategy. The kinematic model is first-order by the formula x_{k+1} = x_{k} + h*v_{k}
  *  for a velocity vector v_{k} at state k.
- * - Noise sources: In this application, an option to add White Gaussian Noise to the true distances of the UAVs relative to landmarks,
- *  is now possible.
+ * - Noise sources: In this application, an option to add White Gaussian Noise to the true distances of the UAVs relative to landmarks is possible. 
+ * Kalman filtering: UAVs in this project are assumed to be mutually independent meaning that the covariance matrix P that describes the uncertainty in
+ *  the initial state simply is the diagonal matrix with diagonal elements that is the squared symmetric maximal UAV positional offset known
+ *  from prior radar measurements. 
 
  * */ 
 
@@ -105,7 +106,7 @@ else{
 
 size_t num_of_iterations = L2Norm_ResList.getLength();
 
-//Write L2-measures of the directional derivative over states to csv-file
+//Write L2-measures of the step solution over states to csv-file
 std::ofstream csv_1 ("../output_data/L2Convergence_" + method + "," + noiseAnswer + ".csv");
 csv_1 << "Iterations," << "L2Error\n";
 for(size_t j = 0;j < num_of_iterations;j++){
@@ -122,7 +123,7 @@ for(size_t j = 0;j < num_of_iterations;j++){
 }
 csv_2.close();
 
-//Write the moving ground truth UAV sensor coordinates over states per UAV to csv-file
+//Write the moving ground truth UAV coordinates over states per UAV to csv-file
 std::ofstream csv_3 ("../output_data/MovingUAV_" + method + "," + noiseAnswer + ".csv");
 csv_3 << "Iterations, ";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
@@ -146,7 +147,7 @@ csv_3 << "\n";
 }     
 csv_3.close();
 
-//Write estimate of the UAV sensor coordinates over states per UAV to csv-file
+//Write estimate of the UAV coordinates over states per UAV to csv-file
 std::ofstream csv_4 ("../output_data/UAVConvergence_" + method + "," + noiseAnswer + ".csv");
 csv_4 << "Iterations, ";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
@@ -170,7 +171,7 @@ csv_4 << "\n";
 }     
 csv_4.close();
 
-//Write elapsed time for solving a least square problem over states to csv-file
+//Write elapsed time for using a numerical estimation method solving the UAV Tracking problem over states to csv-file
 std::ofstream csv_5 ("../output_data/ElapsedTime_" + method + "," + noiseAnswer + ".csv");
 csv_5 << "Iterations, Time\n";
 for(size_t j = 0;j < num_of_iterations;j++){
@@ -180,7 +181,7 @@ csv_5.close();
 }
 
 
-//The radar system logic behind the UAV detection problem
+//The radar system logic behind the UAV Tracking problem
 void TrackingMission_SensorCoordinates(const UAVTracking_parameters& uavParams, Matrix<T>& LandmarkMatrix,const std::tuple<Matrix<T>,Matrix<T>>& UAV,
     const std::tuple<Matrix<size_t>,Matrix<size_t>>& velocitySeeds,const Matrix<size_t>& VarianceSeed)const{
 
@@ -193,7 +194,8 @@ Matrix<T> UAVGuess = std::get<1>(UAV);
 std::cout << "\nMission started. Collecting radar data related to the locations of the UAVs...\n";
 
 T time_sum = 0.0;
-T abs_norm = 1e5;
+//Initialize absolute error as large for the initial state
+T abs_norm = 1e20;
 T old_norm = 0.0;
 T new_norm = 0.0;
 List<T> time_list;
@@ -222,35 +224,35 @@ for(size_t i = 0; i < uavParams.dimension.num_of_uavs;i++){
 T lambda = 0.0;
 size_t iter = 0;
 
-//Initialize covariance matrix P for the Kalman filtering approach
+//Initialize covariance matrix P for the Kalman filtering strategy
 Matrix<T> IdentityMatrix_termP = matcalc.getIdentityMatrix(3*uavParams.dimension.num_of_uavs);
-//P is treated initially as the diagonal matrix consisting of squared maximal UAV positional error measured in meters
+//P is treated initially as the diagonal matrix with diagonal elements as the squared maximal UAV positional error measured in meters, 
+//meaning P measures uncertainty in the initial state for the UAVs
 Matrix<T> P = IdentityMatrix_termP.scalarMatrix(matcalc.square(uavParams.posParams.maximal_offset));
 TrackingParameters TrackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
 bool MissionStillContinuing = true;
- //Solve the UAV Tracking problem over a number of states and collect L2-norm of the solution and residual distances, elapsed time,
-//and the corresponding UAV sensor coordinates
+ //Solve the UAV Tracking problem over a number of states and collect L2-norm of the step solution and residual distances, elapsed time,
+//and the corresponding UAV ground truth/estimates 
 while(MissionStillContinuing){
-    iter++;
       auto varianceParams = std::make_tuple(VarianceSeed,iter);
-      std::cout << "\nIteration " << iter << "\n";
+      std::cout << "\nState " << iter+1 << "\n";
       auto t_start = std::chrono::steady_clock::now();
 
       //Perform kinematic prediction whether the moving UAVs should make a reversed movement in current state or not
-      physconst.predictKinematicMovement(uavParams,TrackingParams.UAVGuess,TrackingParams.UAVTruth,iter,vel_uav_seed,vel_wind_seed);
+      physconst.predictKinematicMovement(uavParams,TrackingParams,iter,vel_uav_seed,vel_wind_seed);
   
       //Solve the numerical estimation problem
-      auto est_output = state_est.State_Estimator(uavParams,TrackingParams,varianceParams);
+      auto [dir_vec_normval,res_normval] = state_est.State_Estimator(uavParams,TrackingParams,varianceParams);
 
-      new_norm = est_output.dir_vec_normval;
-      //Calculate absolute error between the L2-measures for the previous and current step
+      new_norm = dir_vec_normval;
+      //Calculate absolute error between the L2-measures for the previous and current step solution
       if(iter > 0){
         abs_norm = std::abs(new_norm - old_norm);
         old_norm = new_norm; 
       }
 
-      std::cout << "\nL2-Norm Step: " << est_output.dir_vec_normval << "\n";
+      std::cout << "\nL2-Norm Step: " << dir_vec_normval << "\n";
       std::cout << "\nAbsolute L2-Norm between previous and current Step: " << abs_norm << "\n";
 
       //Collect L2-measures and UAV coordinates
@@ -266,8 +268,8 @@ while(MissionStillContinuing){
          uav_truth_list.addElement(uav_t);
          uav_guess_list.addElement(uav_g);
       }
-      L2_dirvec_list.addElement(est_output.dir_vec_normval);
-      L2_res_list.addElement(est_output.dir_vec_normval);
+      L2_dirvec_list.addElement(dir_vec_normval);
+      L2_res_list.addElement(dir_vec_normval);
 
       auto t_end = std::chrono::steady_clock::now();
       std::chrono::duration<T> elapsed_time = t_end-t_start;
@@ -275,18 +277,19 @@ while(MissionStillContinuing){
       time_list.addElement(elapsed_time.count());
       //The solver converges if the L2-measure for the step is minimal, or that the L2-measures for the step between the previous and current state 
       //is sufficiently small
-      if(est_output.dir_vec_normval < uavParams.est.eps || abs_norm < uavParams.est.eps_0){
+      if(dir_vec_normval < uavParams.est.eps || abs_norm < uavParams.est.eps_0){
         MissionStillContinuing = false;
       }
+      iter++;
 
 }
-std::cout << "\nNumber of iterations: " << iter << "\n";
+std::cout << "\nNumber of states: " << iter << "\n";
 for(size_t j = 0;j < time_list.getLength();j++){
    time_sum += time_list[j]; 
    }
 
 //Print final results from the UAV Tracking solver
-std::cout << "\nInitial Sensor coordinates for UAVs, Ground Truth:\n";
+std::cout << "\nInitial UAV coordinates, Ground Truth:\n";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    ListOfMatrices<T>& uav_init_truth_list = TruthColl[i]; 
    std::cout << "\nUAV " << i+1 << ": \n";
@@ -294,7 +297,7 @@ for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    uav_init_t.print();
 }
 
-std::cout << "\nInitial Sensor coordinates for UAVs, Estimate:\n";
+std::cout << "\nInitial UAV coordinates, Estimate:\n";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    ListOfMatrices<T>& uav_init_guess_list = GuessColl[i]; 
    std::cout << "\nUAV " << i+1 << ": \n";
@@ -302,7 +305,7 @@ for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    uav_init_g.print();
 }
 
-std::cout << "\nFinal Sensor coordinates for UAVs, Ground Truth:\n";
+std::cout << "\nFinal UAV coordinates, Ground Truth:\n";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    ListOfMatrices<T>& uav_final_truth_list = TruthColl[i]; 
    std::cout << "\nUAV " << i+1 << ": \n";
@@ -311,7 +314,7 @@ for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
 
 }
 
-std::cout << "\nFinal Sensor coordinates for UAVs, Estimate:\n";
+std::cout << "\nFinal UAV coordinates, Estimate:\n";
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    ListOfMatrices<T>& uav_final_guess_list = GuessColl[i]; 
    std::cout << "\nUAV " << i+1 << ": \n";
@@ -319,7 +322,7 @@ for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    uav_final_g.print();
 }
 
-
+//Checking the numerical precision for the converged estimate
 for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
    ListOfMatrices<T>& uav_final_guess_list = GuessColl[i];
    ListOfMatrices<T>& uav_final_truth_list = TruthColl[i];

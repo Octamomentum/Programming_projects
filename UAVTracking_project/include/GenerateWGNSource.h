@@ -18,9 +18,7 @@ class GenerateWGNSource{
 
 public:
 
-
-
-//Generate WGN to true distances for the UAV positions relative to landmark locations
+//Generate WGN to true distances of the UAV positions relative to landmark locations
 
 void GenerateWGN(Matrix<T>& dist_truth,const size_t& var_ind, const T& variance) const {
 std::mt19937 gen(var_ind);

@@ -1,4 +1,4 @@
-//Testing the functionality from UFTSolver.h
+//Testing the functionality from StateEstimator.h
 
 #include "StateEstimator.h"
 #include "UAVTracking_parameters.h"
@@ -13,8 +13,6 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 3;
 uavParams.dimension.num_of_uavs = 1;
 uavParams.est.eps = 1e-7;
-uavParams.est.beta = 0.8;
-uavParams.est.c_param = 1e-4;
 uavParams.options.activate_method = "G-N";
 uavParams.options.applyWGN = false;
 Matrix<double> LandmarkMatrix(3,3);
@@ -45,9 +43,9 @@ UAVGuess(0,1) = 1.0;
 UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto[dir_vec_normval,res_normval] = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << dir_vec_normval;
+std::cout << "Norm, residual: " << res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);
@@ -69,8 +67,6 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 3;
 uavParams.dimension.num_of_uavs = 1;
 uavParams.est.eps = 1e-7;
-uavParams.est.beta = 0.8;
-uavParams.est.c_param = 1e-4;
 uavParams.est.lambda_threshold = 1e-2;
 uavParams.est.lambda_tuning_factor = 2.0;
 uavParams.est.rho_threshold = 1e-7;
@@ -106,9 +102,9 @@ UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto[dir_vec_normval,res_normval] = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << dir_vec_normval;
+std::cout << "Norm, residual: " << res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);
@@ -130,9 +126,8 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 3;
 uavParams.dimension.num_of_uavs = 1;
 uavParams.est.eps = 1e-7;
-uavParams.est.beta = 0.8;
-uavParams.est.c_param = 1e-4;
 uavParams.est.tau = 1e-12;
+uavParams.est.gamma = 1e-4;
 uavParams.dynamical_UAV_params.h = 1.0;
 uavParams.dynamical_UAV_params.max_uav_velocity = 30.0;
 uavParams.dynamical_UAV_params.max_wind_velocity = 15.0;
@@ -171,9 +166,9 @@ UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto[dir_vec_normval,res_normval] = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << dir_vec_normval;
+std::cout << "Norm, residual: " << res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);

@@ -100,13 +100,13 @@ for(size_t i = 0;i < n;i++){
 return mat;
 }
 
-//Method that constructs a Jacobian matrix and residual vector for data assimilation relating to UAV positions
+//Method that constructs a block matrix of Jacobians and a vectorized residual vector for data assimilation relating to UAV coordinate estimation
 auto GenerateMatrixData(const UAVTracking_parameters& uavParams, const TrackingParameters& trackingParams, const Matrix<T>& guess,
     const std::tuple<Matrix<size_t>,size_t> varianceParams)const{
 
 Matrix<size_t> VarianceSeed = std::get<0>(varianceParams);
 size_t iter = std::get<1>(varianceParams);
-//Initialize a block matrix whose diagonal elements will consist of Jacobian relating to each UAV
+//Initialize a block matrix whose diagonal elements will consist of Jacobian relating to each corresponding UAV
 size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
 size_t n = 3*uavParams.dimension.num_of_uavs;
 Matrix<T> J(m,n);
@@ -139,27 +139,7 @@ for(size_t uav_ind = 0;uav_ind < uavParams.dimension.num_of_uavs;uav_ind++){
 return std::make_tuple(J,r);
 }
 
-//Augment J and r if Levenberg-Marquardt method is applied to the UAV Tracking problem solver, otherwise keep the Jacobian and residual
-auto generateMatrixForm(const Matrix<T>& A,const Matrix<T>& b, const T& lambda, const std::string& activate_method)const{
-
-if(activate_method == "L-M"){
-  Matrix<T> newJacobian(A.getRows()+A.getCols(),A.getCols());
-  Matrix<T> newResidual(A.getRows()+A.getCols(),1);
-  for(size_t i = 0;i < A.getRows();i++){
-      for(size_t j = 0;j < A.getCols();j++){
-          newJacobian(i,j) = A(i,j);
-      }
-      newResidual(i,0) = b(i,0);
-   }
-   for(size_t i = 0; i < newJacobian.getCols();i++){
-      newJacobian(i+A.getRows(),i) = std::sqrt(lambda); 
-    }
-   return std::make_tuple(newJacobian,newResidual);  
-}
-return std::make_tuple(A,b);
-}
-
-//Calculates trigonometric terms cosine and sine needed for generating Givens rotations related to QR decomposition.  
+//Calculates trigonometric terms cosine and sine needed for generating Givens rotations relating to QR decomposition.  
 auto GivensParameters_QR(const T& pivot_cand,const T& target_cand) const { 
 //Used to prevent underflow and overflow
 T denum = std::hypot(pivot_cand,target_cand);
@@ -214,7 +194,7 @@ for(size_t i = 0; i < m;i++){
 return IdentityMatrix;
 }
 
-//Help function that constructs filtered versions of any matrix A and vector b, to form an upper triangular structure.
+//Help function that constructs filtered versions of any matrix A and vector b to form an upper triangular structure.
 
 auto generateTruncatedMatrices(const Matrix<T> & A, const Matrix<T>& b)const {
 size_t truncated_rows = std::min(A.getRows(),A.getCols());

@@ -1,14 +1,14 @@
 /**
  * @file generateRadarStructure.h
- * @brief Construction of the radar environment covering landmark locations, ground truth/guesses sensor coordinates for the moving UAVs.
+ * @brief Construction of the radar environment covering landmark locations, ground truth/guesses for UAV coordinates.
  * 
- * - Underlying design: A method generating the radar is implemented by using pseudo-randomized seeds stored in matrix structures which includes
- * velocities for UAVs/wind and also optional added White Gaussian Noise to the true distances of the UAVs relative to the landmarks.
- * To generate the environment, a radius is fixed to form the radar perimeter while other specified
- *  spherical boundaries are set for the UAV coordinates.
- * - Radar components: The landmark locations and the ground truth for the UAV
- *  sensor coordinates are generated inside the radar following a spherical coordinate system centered at the origin.
- *  The guesses for the UAV coordinates can be generated inside or outside the radar.
+ * - Underlying design: A method generating the radar environment is implemented by using pseudo-randomized seeds stored in matrix structures which includes
+ * UAV/wind velocities and also optional added White Gaussian Noise to the true distances of the UAVs relative to the landmarks.
+ * To generate the environment, a radius is fixed to form the radar domain while other specified
+ *  radial boundaries are set for the UAV coordinates.
+ * - Radar components: The landmark locations and the UAV ground truth coordinates are generated within the radar domain
+ *  following a spherical coordinate system centered at the origin.
+ *  The initial UAV guesses may be generated either inside or outside the radar environment.
   
  * 
  * */ 
@@ -43,7 +43,7 @@ if(uavParams.seeds.uav_guess_seedvalue >= Limit|| uavParams.seeds.landmark_seedv
   throw std::invalid_argument("The radar system couldn't be constructed. Reason: Negative seed(s)."); 
 }
 
-//Ensures that the UAV Fleet Tracking problem only is applied for at least three landmarks or more
+//Ensures that the UAV Tracking problem only is applied for at least three landmarks or more
 if(uavParams.dimension.num_of_landmarks < 3 || uavParams.dimension.num_of_landmarks >= Limit){
    throw std::invalid_argument("The radar system couldn't be constructed. Reason: Too few landmarks.");
 }
@@ -96,7 +96,7 @@ for(size_t i = 0; i < uavParams.dimension.num_of_uavs;i++){
 return std::make_tuple(lm_seed,uav_truth_seed,uav_guess_seed,vel_uav_seed,vel_wind_seed,variance_seed);   
 }
 
-//Generate landmarks or UAV coordinates relative to ground truth/initial guess
+//Generate landmarks or UAV ground truth/initial guess
 void generateGeometricObject(Matrix<T>& init_matrix,const Matrix<size_t>& object_seed, const T& lb_radius, const T& ub_radius)const{
 
 std::uniform_real_distribution<T> u_gen(-1,1);
@@ -117,13 +117,13 @@ for(size_t i = 0; i < init_matrix.getRows();i++){
 
 }
 
-//Generate the radar
+//Generate the radar domain
 
 auto generateRadar(const UAVTracking_parameters& uavParams, const Matrix<size_t>& landmark_seed,const Matrix<size_t>& uav_truth_seed,
-   const Matrix<size_t>& uav_guess_seed) const{
+const Matrix<size_t>& uav_guess_seed) const{
 //Controls the radial feasibility
 if(uavParams.posParams.radar_radius <= 0 || uavParams.posParams.uav_guess_radius <= 0){
-   throw std::invalid_argument("The radar system couldn't be constructed. Reason: Invalid radii or radial offsets.");
+   throw std::invalid_argument("The radar system couldn't be constructed. Reason: Invalid radii parameters.");
 }
 
 Matrix<T> LandmarkMatrix(uavParams.dimension.num_of_landmarks,3);
@@ -132,22 +132,22 @@ Matrix<T> UAVGuess(uavParams.dimension.num_of_uavs,3);
 
 T lb_radius = 0.0;
 
-//Generates the landmark locations
+//Generates the landmark locations and UAV ground truth coordinates inside the radar environment
 generateGeometricObject(LandmarkMatrix,landmark_seed,lb_radius,uavParams.posParams.radar_radius);
 generateGeometricObject(UAVTruth,uav_truth_seed,lb_radius,uavParams.posParams.radar_radius);
 
- //Inside the radar perimeter
+ //UAV guesses: inside the radar environment
   if(uavParams.posParams.uav_guess_radius<uavParams.posParams.radar_radius){
     generateGeometricObject(UAVGuess,uav_guess_seed,lb_radius,uavParams.posParams.uav_guess_radius);
     }
-  //Outside the radar perimeter
+  //UAV guesses: outside the radar environment
   else {
      generateGeometricObject(UAVGuess,uav_guess_seed,uavParams.posParams.radar_radius,uavParams.posParams.uav_guess_radius);
   }
 return std::make_tuple(LandmarkMatrix,UAVTruth, UAVGuess);   
 }
 
-//Construct the environment consisting of the radar and initial guess for the sensor coordinates relative to UAVs 
+//Construct the environment consisting of the radar and initial UAV guesses
 auto generateGlobalEnvironment(const UAVTracking_parameters& uavParams)const{
 auto [lm_seed,uav_truth_seed,uav_guess_seed,vel_uav_seed,vel_wind_seed,VarianceSeed] = generateSeeds(uavParams);
 auto [LandmarkMatrix, UAVTruth, UAVGuess] = generateRadar(uavParams,lm_seed,uav_truth_seed,uav_guess_seed);
