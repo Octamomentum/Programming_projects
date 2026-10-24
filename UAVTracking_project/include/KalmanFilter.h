@@ -18,9 +18,9 @@ MatrixCalculations<T> matcalc;
 
 public:
 
-//Update the covariance matrix P to the calibration relating to the kinematic movement phase
+//Update the covariance matrix P based on the calibration relating to the kinematic movement phase
 void updateCalibration(const UAVTracking_parameters& uavParams, Matrix<T>& P)const{
-//Calibration based on kinematic movement for the UAVs
+//Covariance matrix Q describing the uncertainty in the kinematic movement for the UAVs
 Matrix<T> IdentityMatrix_termQ = matcalc.getIdentityMatrix(3*uavParams.dimension.num_of_uavs);
 T Qterm_1 = matcalc.square(uavParams.dynamical_UAV_params.max_uav_velocity*uavParams.dynamical_UAV_params.h);
 T Qterm_2 = matcalc.square(uavParams.dynamical_UAV_params.max_wind_velocity*uavParams.dynamical_UAV_params.h);
@@ -39,12 +39,11 @@ Matrix<T> KalmanFiltering(const UAVTracking_parameters& uavParams,const Matrix<T
 
 Matrix<T> Mat_term = P*J.Transpose();
 //Regularization matrix to prevent ill-posed behavior (Tikhonov Regularization) for solving the system of equations below
-Matrix<T> Rnoise(uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs,uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs);
-for(size_t i = 0;i < Rnoise.getRows();i++){
-   Rnoise(i,i) = uavParams.est.tau;
-}
+size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
+Matrix<T> R_part = matcalc.getIdentityMatrix(m);
+Matrix<T> R_noise = R_part.scalarMatrix(uavParams.est.tau);
 //State transition matrix
-Matrix<T> S = J*Mat_term + Rnoise;
+Matrix<T> S = J*Mat_term + R_noise;
 Matrix<T> rhs_term = J*P.Transpose();
 Matrix<T> S_T = S.Transpose();
 auto [R,b_tilde] = matcalc.QRDecomposition_GivensApproach(S_T,rhs_term,uavParams.est.eps);

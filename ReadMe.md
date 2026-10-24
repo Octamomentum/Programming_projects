@@ -139,7 +139,9 @@ The radar environment follows a spherical coordinate system centered at the orig
 
 Radar observations are either ideal or affected by potential noisy data sources using White Gaussian Noise to generate real-world sensor uncertainty  relating to true distances of the UAV positions relative to landmark locations. 
 
-Estimated positions are calculated through nonlinear least-squares optimization using an implemented numerical estimation method strategy: Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering techniques.
+Estimated positions are calculated through nonlinear least-squares optimization using an implemented numerical estimation method strategy: Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering techniques. 
+
+The UAVs are mutally independent meaning that the covariance matrix P describing uncertainty in the initial states is initialized as the diagonal matrix with diagonal elements as the variance for the maximal positional UAV error offset.
 
 The goal of this mathematical framework is to study estimation performance behavior under real-world physical constraints.
 

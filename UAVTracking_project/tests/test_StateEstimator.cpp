@@ -45,9 +45,9 @@ UAVGuess(0,1) = 1.0;
 UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto est_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << est_output.dir_vec_normval;
+std::cout << "Norm, residual: " << est_output.res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);
@@ -106,9 +106,9 @@ UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto est_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << est_output.dir_vec_normval;
+std::cout << "Norm, residual: " << est_output.res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);
@@ -171,9 +171,9 @@ UAVGuess(0,2) = 1.0;
 
 TrackingParameters trackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
-auto uft_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
-std::cout << "Norm, dir vec: " << uft_output.dir_vec_normval;
-std::cout << "Norm, residual: " << uft_output.res_normval;
+auto est_output = state_est.State_Estimator(uavParams,trackingParams,varianceParams);
+std::cout << "Norm, dir vec: " << est_output.dir_vec_normval;
+std::cout << "Norm, residual: " << est_output.res_normval;
 Matrix<double> x_est(1,3);
 
 x_est(0,0) = 3 - 2*std::sqrt(2);

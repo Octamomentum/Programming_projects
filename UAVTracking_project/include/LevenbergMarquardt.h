@@ -19,13 +19,13 @@ MatrixCalculations<T> matcalc;
 public:
 
 //A term based on the Trust Region logic for the Levenberg-Marquardt method
-auto GainRatio(TrackingParameters& trackingParams, const Matrix<T>& R, const Matrix<T>& b_tilde,const Matrix<T>& x_dir_vec, const T& lambda)const{
-
+auto GainRatio(TrackingParameters& trackingParams, const Matrix<T>& R, const Matrix<T>& b_tilde,const Matrix<T>& x_dir_vec)const{
+//Transform vectorized step to appropriate matrix form
 Matrix<T> transformedSolution = matcalc.transformVectorToMatrix(x_dir_vec,trackingParams.UAVGuess.getRows());
 Matrix<T> x_trial = trackingParams.UAVGuess + transformedSolution;
 T nom = 0.0;
 T rho = 0.0;
-//Expected cost function value
+//Actual cost function value
 for(size_t i = 0;i < transformedSolution.getRows();i++){
    Matrix<T> row_vec1 = trackingParams.UAVGuess.getRow(i);
    Matrix<T> row_vec2 = x_trial.getRow(i);
@@ -33,9 +33,9 @@ for(size_t i = 0;i < transformedSolution.getRows();i++){
    T nom_2 = matcalc.square(matcalc.L2Norm(matcalc.distanceMetric(trackingParams.mat,row_vec2)));
    nom += 0.5*(nom_1 - nom_2); 
 }
-//Actual cost function value via QR-decomposition
+//Expected cost function value via QR-decomposition
 T denom_term1 = 0.5*(matcalc.square(matcalc.L2Norm(b_tilde)) - matcalc.square(matcalc.L2Norm(R*x_dir_vec - b_tilde)));
-T denom_term2 = 0.5*lambda*matcalc.square(matcalc.L2Norm(x_dir_vec));
+T denom_term2 = 0.5*trackingParams.lambda*matcalc.square(matcalc.L2Norm(x_dir_vec));
 
 T denom = denom_term1 - denom_term2;
 //Preventing NaN-situations
@@ -65,7 +65,7 @@ Matrix<T> dir_vec(R.getRows(),1);
        //Solve least squares problem
        dir_vec = matcalc.BackwardSubstitution(R_filtered,btilde_filtered);
        //Calculate Gain Ratio for making a trial decision
-       T rho = GainRatio(trackingParams,R_filtered,btilde_filtered,dir_vec,trackingParams.lambda);
+       T rho = GainRatio(trackingParams,R_filtered,btilde_filtered,dir_vec);
        std::cout<< "\nLambda: " << trackingParams.lambda << "\n";
        std::cout<< "\nRho: " << rho << "\n";
        if(std::abs(rho) < uavParams.est.rho_threshold || trackingParams.lambda == 0.0){

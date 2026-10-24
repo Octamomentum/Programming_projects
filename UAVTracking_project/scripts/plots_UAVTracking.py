@@ -22,7 +22,7 @@ num_of_landmarks = formatter(UAVParameters[0])
 num_of_uavs = int(UAVParameters[1])
 radar_radius = formatter(UAVParameters[2])
 uav_guess_radius = formatter(UAVParameters[3])
-variance =formatter(UAVParameters[4])
+variance = formatter(UAVParameters[4])
 
 
 
@@ -53,7 +53,7 @@ KFWGNdata_iter = KFWGNdata_L2[:,0]
 KFWGNdata_L2Error = KFWGNdata_L2[:,1]
 
 
-plt.suptitle(rf"L2 Convergence solution: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}",
+plt.suptitle(rf"L2 Convergence solution for {num_of_uavs} UAVs: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}",
               fontsize=12, fontweight='bold')
 plt.plot(GNnoWGNdata_iter,GNnoWGNdata_L2Error, label='Gauss-Newton')
 plt.plot(LMnoWGNdata_iter,LMnoWGNdata_L2Error, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -65,7 +65,7 @@ plt.tight_layout()
 plt.savefig('../plots/L2ConvergenceSolution.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-plt.suptitle(rf"L2 Convergence solution, WGN: {num_of_landmarks} Landmarks,  $r_{{radar}}$ = {radar_radius}, $r_{{guess}}$ = {uav_guess_radius},$\sigma^2$ = {variance}",
+plt.suptitle(rf"L2 Convergence solution for {num_of_uavs} UAVs, WGN: {num_of_landmarks} Landmarks,  $r_{{radar}}$ = {radar_radius}, $r_{{guess}}$ = {uav_guess_radius},$\sigma^2$ = {variance}",
               fontsize=12, fontweight='bold')
 plt.plot(GNWGNdata_iter,GNWGNdata_L2Error, label='Gauss-Newton')
 plt.plot(LMWGNdata_iter,LMWGNdata_L2Error, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -105,7 +105,7 @@ KFWGNdata_iterRes = KFWGNdata_L2Res[:,0]
 KFWGNdata_L2ErrorRes = KFWGNdata_L2Res[:,1]
 
 
-plt.suptitle(rf"L2 Convergence residual: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius}, $r_{{guess}}$ = {uav_guess_radius}",
+plt.suptitle(rf"L2 Convergence residual for {num_of_uavs} UAVs: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius}, $r_{{guess}}$ = {uav_guess_radius}",
               fontsize=12, fontweight='bold')
 plt.plot(GNnoWGNdata_iterRes,GNnoWGNdata_L2ErrorRes, label='Gauss-Newton')
 plt.plot(LMnoWGNdata_iter,LMnoWGNdata_L2ErrorRes, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -118,7 +118,7 @@ plt.savefig('../plots/L2ConvergenceResidual.png', dpi=300, bbox_inches='tight')
 plt.legend()
 plt.show()
 
-plt.suptitle(rf"L2 Convergence residual, WGN: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
+plt.suptitle(rf"L2 Convergence residual for {num_of_uavs} UAVs, WGN: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
              fontsize=12, fontweight='bold')
 plt.plot(GNWGNdata_iterRes,GNWGNdata_L2ErrorRes, label='Gauss-Newton')
 plt.plot(LMWGNdata_iterRes,LMWGNdata_L2ErrorRes, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -161,7 +161,7 @@ KFWGNdata_iterTime = KFWGNdata_Time[:,0]
 KFWGNdata_errorTime = KFWGNdata_Time[:,1]
 
 
-plt.suptitle(rf"Elapsed Time: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}", fontsize=12,
+plt.suptitle(rf"Elapsed Time for {num_of_uavs} UAVs: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}", fontsize=12,
               fontweight='bold')
 plt.plot(GNnoWGNdata_iterTime,GNnoWGNdata_errorTime, label='Gauss-Newton')
 plt.plot(LMnoWGNdata_iterTime,LMnoWGNdata_errorTime, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -174,7 +174,7 @@ plt.savefig('../plots/ElapsedTime.png', dpi=300, bbox_inches='tight')
 plt.legend()
 plt.show()
 
-plt.suptitle(rf" Elapsed Time, WGN: {num_of_landmarks} Landmarks,  $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
+plt.suptitle(rf" Elapsed Time for {num_of_uavs} UAVs, WGN: {num_of_landmarks} Landmarks,  $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
              fontsize=12, fontweight='bold')
 plt.plot(GNWGNdata_iterTime,GNWGNdata_errorTime, label='Gauss-Newton')
 plt.plot(LMWGNdata_iterTime,LMWGNdata_errorTime, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -292,19 +292,19 @@ def plotTelemetryBenchmark(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n):
         # Panel for x-axis
         axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[0].plot(iterTruth, TruthcoordX, color='blue', linewidth=2, label =rf"Ground truth coordinate, UAV {i+1}")
-        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--', alpha=0.5)
+        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--', label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[0].set_ylabel("X-axis")
 
         # Panel for y-axis
         axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[1].plot(iterTruth, TruthcoordY, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--', alpha=0.5)
+        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[1].set_ylabel("Y-axis")
 
         # Panel for z-axis
         axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[2].plot(iterTruth, TruthcoordZ, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--', alpha=0.5)
+        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[2].set_ylabel("Z-axis")
 
         for ax in axs:
@@ -332,19 +332,19 @@ def plotTelemetryBenchmark_WGN(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n
         # Panel for x-axis
         axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[0].plot(iterTruth, TruthcoordX, color='blue', linewidth=2, label =rf"Ground truth coordinate, UAV {i+1}")
-        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--', alpha=0.5)
+        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[0].set_ylabel("X-axis")
 
         # Panel for y-axis
         axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[1].plot(iterTruth, TruthcoordY, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--', alpha=0.5)
+        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[1].set_ylabel("Y-axis")
 
         # Panel for z-axis
         axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
         axs[2].plot(iterTruth, TruthcoordZ, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--', alpha=0.5)
+        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
         axs[2].set_ylabel("Z-axis")
 
         for ax in axs:

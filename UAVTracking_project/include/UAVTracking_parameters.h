@@ -64,7 +64,7 @@ struct UAVPosParams{
 double radar_radius = 0.0;
 // A radial bound that determines if the initial guesses for the UAV positions are inside or outside the radar perimeter
 double uav_guess_radius = 0.0;
-//A maximal positional error term known from radar measurements, used for initializing the covariance matrix P 
+//A maximal positional error term known from radar measurements, used for initializing the covariance matrix P that describes uncertainty in initial states
 double maximal_offset = 0.0;
 };
 

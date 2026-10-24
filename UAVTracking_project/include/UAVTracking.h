@@ -19,7 +19,9 @@
  *  method. The kinematic model is first-order by the formula x_{k+1} = x_{k} + h*v_{k}
  *  for a velocity vector v_{k} at state k.
  * - Noise sources: In this application, an option to add White Gaussian Noise to the true distances of the UAVs relative to landmarks,
- *  is now possible.
+ *  is now possible. 
+ * Kalman filtering: UAVs in this project are mutually independent meaning that the covariance matrix P that describes the uncertainty in
+ *  the initial state simply is the diagonal matrix with diagonal elements that is the variance for the maximal UAV positional offset. 
 
  * */ 
 
@@ -224,7 +226,8 @@ size_t iter = 0;
 
 //Initialize covariance matrix P for the Kalman filtering approach
 Matrix<T> IdentityMatrix_termP = matcalc.getIdentityMatrix(3*uavParams.dimension.num_of_uavs);
-//P is treated initially as the diagonal matrix consisting of squared maximal UAV positional error measured in meters
+//P is treated initially as the diagonal matrix consisting of squared maximal UAV positional error measured in meters, meaning P measures symmetric
+//uncertainty in the initial states for the UAVs
 Matrix<T> P = IdentityMatrix_termP.scalarMatrix(matcalc.square(uavParams.posParams.maximal_offset));
 TrackingParameters TrackingParams{LandmarkMatrix,UAVTruth,UAVGuess,P,lambda};
 
@@ -238,7 +241,7 @@ while(MissionStillContinuing){
       auto t_start = std::chrono::steady_clock::now();
 
       //Perform kinematic prediction whether the moving UAVs should make a reversed movement in current state or not
-      physconst.predictKinematicMovement(uavParams,TrackingParams.UAVGuess,TrackingParams.UAVTruth,iter,vel_uav_seed,vel_wind_seed);
+      physconst.predictKinematicMovement(uavParams,TrackingParams,iter,vel_uav_seed,vel_wind_seed);
   
       //Solve the numerical estimation problem
       auto est_output = state_est.State_Estimator(uavParams,TrackingParams,varianceParams);

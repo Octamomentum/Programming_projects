@@ -23,7 +23,7 @@ MatrixCalculations<T> matcalc;
 
 public:
 
-//Generates a velocity vector for treating the UAV movement 
+//Generates a velocity vector for treating a moving object 
 Matrix<T> getVelocity(size_t& vel_seed, const T& max_velocity)const{
 if(max_velocity < 0){
   throw std::invalid_argument("The radar system couldn't be constructed. Reason: Negative maximal velocity."); 
@@ -74,14 +74,14 @@ return false;
 }
 
 // A method that performs the kinematic movement prediction
-void predictKinematicMovement(const UAVTracking_parameters& uavParams,Matrix<T>& UAVGuess,Matrix<T>& UAVTruth,
+void predictKinematicMovement(const UAVTracking_parameters& uavParams,TrackingParameters& trackingParams,
    const size_t& iter, Matrix<size_t>& uav_vel_seed, Matrix<size_t>& wind_vel_seed)const{
     
    for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
       Matrix<T> vel_vec(3,1);
       Matrix<T> uav_t(3,1);
       for(size_t j = 0;j < 3;j++){
-         uav_t(j,0) = UAVTruth(i,j);
+         uav_t(j,0) = trackingParams.UAVTruth(i,j);
       }
       size_t uav_vel_val = iter + uav_vel_seed(i,0);
       size_t wind_vel_val = iter + wind_vel_seed(i,0);
@@ -99,8 +99,8 @@ void predictKinematicMovement(const UAVTracking_parameters& uavParams,Matrix<T>&
          }
       
       for(size_t j = 0;j < 3;j++){
-         UAVTruth(i,j) += uavParams.dynamical_UAV_params.h*vel_vec(j,0); 
-         UAVGuess(i,j) += uavParams.dynamical_UAV_params.h*vel_vec(j,0);
+         trackingParams.UAVTruth(i,j) += uavParams.dynamical_UAV_params.h*vel_vec(j,0); 
+         trackingParams.UAVGuess(i,j) += uavParams.dynamical_UAV_params.h*vel_vec(j,0);
        }    
    }
   

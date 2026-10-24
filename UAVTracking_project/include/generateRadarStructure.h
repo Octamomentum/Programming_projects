@@ -120,7 +120,7 @@ for(size_t i = 0; i < init_matrix.getRows();i++){
 //Generate the radar
 
 auto generateRadar(const UAVTracking_parameters& uavParams, const Matrix<size_t>& landmark_seed,const Matrix<size_t>& uav_truth_seed,
-   const Matrix<size_t>& uav_guess_seed) const{
+const Matrix<size_t>& uav_guess_seed) const{
 //Controls the radial feasibility
 if(uavParams.posParams.radar_radius <= 0 || uavParams.posParams.uav_guess_radius <= 0){
    throw std::invalid_argument("The radar system couldn't be constructed. Reason: Invalid radii or radial offsets.");

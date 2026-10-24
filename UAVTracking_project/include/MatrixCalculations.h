@@ -100,7 +100,7 @@ for(size_t i = 0;i < n;i++){
 return mat;
 }
 
-//Method that constructs a Jacobian matrix and residual vector for data assimilation relating to UAV positions
+//Method that constructs a block matrix of Jacobians and a vectorized residual vector for data assimilation relating to estimating UAV positions
 auto GenerateMatrixData(const UAVTracking_parameters& uavParams, const TrackingParameters& trackingParams, const Matrix<T>& guess,
     const std::tuple<Matrix<size_t>,size_t> varianceParams)const{
 

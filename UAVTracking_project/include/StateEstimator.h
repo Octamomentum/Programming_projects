@@ -87,7 +87,7 @@ return alpha;
 //The numerical estimation solver for the UAV Tracking problem: it either uses Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering
 //techniques
 auto State_Estimator(const UAVTracking_parameters& uavParams, TrackingParameters& trackingParams,
-const std::tuple<Matrix<size_t>,size_t>& varianceParams)const{
+  const std::tuple<Matrix<size_t>,size_t>& varianceParams)const{
   
   EstOutput est_output;
   Matrix<T> dir_vec(3*uavParams.dimension.num_of_uavs,1);
