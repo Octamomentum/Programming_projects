@@ -12,18 +12,16 @@
 template <typename T>
 class KalmanFilter{
 
-private:
+public:
 
 MatrixCalculations<T> matcalc;
-
-public:
 
 //Generating the covariance matrix that measures uncertainty in radar measurements
 Matrix<T> generateR(const UAVTracking_parameters& uavParams)const{
 
 size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
 
-//In the ideal case, R is gamma*I where gamma is a small constant
+//In the ideal case, R is gamma*I where gamma is a constant belonging (0,1)
 if(!uavParams.options.applyWGN){
   return matcalc.getIdentityMatrix(m).scalarMatrix(uavParams.est.gamma);
 }
@@ -31,12 +29,13 @@ if(!uavParams.options.applyWGN){
 return matcalc.getIdentityMatrix(m).scalarMatrix(uavParams.variance.variance_distances);
 }
 
-//Update the covariance matrix P based on the calibration relating to the kinematic UAV movement phase
+//Update the covariance matrix P based on the calibration relating to the kinematic prediction phase
 void updateCalibration(const UAVTracking_parameters& uavParams, Matrix<T>& P)const{
 //Covariance matrix Q describing the uncertainty in the kinematic UAV movement
 Matrix<T> IdentityMatrix_termQ = matcalc.getIdentityMatrix(3*uavParams.dimension.num_of_uavs);
-T Qterm_1 = matcalc.square(uavParams.dynamical_UAV_params.max_uav_velocity*uavParams.dynamical_UAV_params.h);
-T Qterm_2 = matcalc.square(uavParams.dynamical_UAV_params.max_wind_velocity*uavParams.dynamical_UAV_params.h);
+//Each term is variance for velocity magnitudes: UAV velocity and wind disturbances meased in m/s, h step-size for every radar impulse measured in seconds
+T Qterm_1 = matcalc.square(uavParams.dynamical_UAV_params.uav_velocity*uavParams.dynamical_UAV_params.h);
+T Qterm_2 = matcalc.square(uavParams.dynamical_UAV_params.wind_velocity*uavParams.dynamical_UAV_params.h);
 T governed_vel_magnitude_terms = Qterm_1 + Qterm_2;
 Matrix<T> Q = IdentityMatrix_termQ.scalarMatrix(governed_vel_magnitude_terms);
 
@@ -63,7 +62,7 @@ Matrix<T> K = matcalc.BackwardSubstitution(R,b_tilde);
 return K.Transpose();
 }
 
-//Estimate the projected solution step in order to update the UAV positions
+//Estimate the projected step solution in order to update the UAV positions in the next state
 Matrix<T> estimateState(const Matrix<T>& J, const Matrix<T>& r, Matrix<T>& P, const Matrix<T>& K)const{
 
 Matrix<T> IdentityMatrixTerm = matcalc.getIdentityMatrix(J.getCols());
@@ -74,11 +73,11 @@ return proj_sol;
 }
 
 //Kalman Filter method
-Matrix<T> KalmanFilter_Approach(const UAVTracking_parameters& uavParams, TrackingParameters& trackingParams, const Matrix<T>& J, const Matrix<T>& r)const{
+Matrix<T> KalmanFilter_Approach(const UAVTracking_parameters& uavParams, Matrix<T>& P, const Matrix<T>& J, const Matrix<T>& r)const{
 
-updateCalibration(uavParams,trackingParams.P);
-Matrix<T> K = KalmanFiltering(uavParams,trackingParams.P,J);
-Matrix<T> proj_sol = estimateState(J,r,trackingParams.P,K);
+updateCalibration(uavParams,P);
+Matrix<T> K = KalmanFiltering(uavParams,P,J);
+Matrix<T> proj_sol = estimateState(J,r,P,K);
 return proj_sol;
 }
 

@@ -12,31 +12,27 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 1e2;
 uavParams.dimension.num_of_uavs = 2;
 
-uavParams.est.eps = 1e-7;
-uavParams.est.eps_0 = 1e-2;
+uavParams.est.eps = 1e-10;
 uavParams.est.rho_threshold = 1e-7;
 uavParams.est.tau = 1e-3;
 uavParams.est.lambda_threshold = 1e-2;
 uavParams.est.lambda_tuning_factor = 2.0;
-uavParams.est.gamma = 1e-1;
+uavParams.est.gamma = 1e-2;
 
 uavParams.posParams.radar_radius = 1e3;
-uavParams.posParams.uav_guess_radius = 1e5;
-uavParams.posParams.maximal_offset = 1.0;
+uavParams.posParams.uav_guess_radius = 1e6;
+uavParams.posParams.maximal_offset = 2.0;
 
-uavParams.seeds.initial_velocity_seedvalue = 12;
-uavParams.seeds.initial_wind_velocity_seedvalue = 17;
-uavParams.seeds.landmark_seedvalue = 23;
-uavParams.seeds.uav_guess_seedvalue = 25;
-uavParams.seeds.uav_truth_seedvalue = 29;
-uavParams.seeds.variance_seedvalue = 40;
-
+uavParams.seeds.radar_anchors_seedvalue = 7;
+uavParams.seeds.landmark_seedvalue = 12;
+uavParams.seeds.uav_seedvalue = 15;
+uavParams.seeds.variance_seedvalue = 21;
 
 uavParams.variance.variance_distances = 1e-1;
 
-uavParams.dynamical_UAV_params.h = 1e-1;
-uavParams.dynamical_UAV_params.max_uav_velocity = 8.0;
-uavParams.dynamical_UAV_params.max_wind_velocity = 6.0;
+uavParams.dynamical_UAV_params.h = 1.0;
+uavParams.dynamical_UAV_params.uav_velocity = 8.0;
+uavParams.dynamical_UAV_params.wind_velocity = 6.0;
 
 //Default options
 uavParams.options.activate_method = "G-N";
@@ -74,7 +70,7 @@ uav_tracking.UAVTracking_Solver(main_params);
 main_params.options.activate_method = "Kalman";
 uav_tracking.UAVTracking_Solver(main_params);
 
-//Write needed parameters for a csv-file to use in Python script
+//Write needed parameters to a csv-file in order use in Python script for visualization
 std::ofstream csv ("../output_data/UAVParameters.csv");
 csv << "NumOfLandmarks, " << "NumOfUAVs," << "RadarRadius," << "RadialBoundaryGuess," << "VarianceTrueDistances" << "Gamma\n";
 csv << main_params.dimension.num_of_landmarks << "," << main_params.dimension.num_of_uavs << "," << main_params.posParams.radar_radius << "," << 

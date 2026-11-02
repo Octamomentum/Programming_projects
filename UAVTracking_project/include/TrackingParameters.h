@@ -7,15 +7,16 @@
 #pragma once
 #include "MatrixObject.h"
 
-struct TrackingParameters{
 //Matrix objects and lambda passed by reference
+struct TrackingParameters{
 //Landmark matrix
-MatrixObject<double>& mat;
-//Matrix structures for ground truth respective guess
-MatrixObject<double>& UAVTruth;
-MatrixObject<double>& UAVGuess;
+MatrixObject<double>& LandmarkMatrix;
+//Matrix consisting of UAV coordinates row-wise
+MatrixObject<double>& UAV;
 //Covariance matrix P
 MatrixObject<double>& P;
+//Iteration
+size_t& iter;
 //Used for regularizing the UAV Tracking problem if Levenberg-Marquardt method is used
 double& lambda;
 };

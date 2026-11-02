@@ -1,10 +1,8 @@
-#This file is meant for plotting the results generated from C++ code 
+#Python script for automatically building C++ project and visualizing numerical results 
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import LogFormatterMathtext
 import subprocess
-import sys
 
 print("Compiling C++ project UAV Tracking...")
 
@@ -17,15 +15,12 @@ print("Plotting the results...")
 #Getting needed parameters for the plots
 
 UAVParameters = np.loadtxt("../output_data/UAVParameters.csv",delimiter=",",skiprows=1)
-formatter = LogFormatterMathtext()
-num_of_landmarks = formatter(UAVParameters[0])
+num_of_landmarks = int(UAVParameters[0])
 num_of_uavs = int(UAVParameters[1])
-radar_radius = formatter(UAVParameters[2])
-uav_guess_radius = formatter(UAVParameters[3])
-variance = formatter(UAVParameters[4])
-gamma = formatter(UAVParameters[5])
-
-
+radar_radius = int(UAVParameters[2])
+uav_guess_radius = int(UAVParameters[3])
+variance = UAVParameters[4]
+gamma = UAVParameters[5]
 
 #First file is data for the L2-measures of the step solution
 GNnoWGNdata_L2 = np.loadtxt("../output_data/L2Convergence_GN,NoWGN.csv",delimiter=",",skiprows=1)
@@ -132,7 +127,7 @@ plt.savefig('../plots/WGN_L2ConvergenceResidual.png', dpi=300, bbox_inches='tigh
 plt.legend()
 plt.show()
 
-#The third file is data representing elapsed time using numerical methods over states
+#The third file is data representing elapsed time using the numerical estimation methods over iterations
 
 GNnoWGNdata_Time = np.loadtxt("../output_data/ElapsedTime_GN,NoWGN.csv"
                                    ,delimiter=",",skiprows=1)
@@ -175,7 +170,7 @@ plt.savefig('../plots/ElapsedTime.png', dpi=300, bbox_inches='tight')
 plt.legend()
 plt.show()
 
-plt.suptitle(rf" Elapsed Time for {num_of_uavs} UAVs, WGN: {num_of_landmarks} Landmarks,  $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
+plt.suptitle(rf" Elapsed Time for {num_of_uavs} UAVs, WGN: {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}",
              fontsize=12, fontweight='bold')
 plt.plot(GNWGNdata_iterTime,GNWGNdata_errorTime, label='Gauss-Newton')
 plt.plot(LMWGNdata_iterTime,LMWGNdata_errorTime, color = 'g', marker = 'o',linestyle='-',label='Levenberg-Marquardt')
@@ -199,113 +194,85 @@ def generateUAVData(lst, data_lst, n):
     
         lst.append(uav_list)
 
-
-#Fourth file is data that represents the moving ground truth UAV coordinates for each state
-
-GNnoWGNdatatruth = np.loadtxt("../output_data/MovingUAV_GN,noWGN.csv",delimiter=",",skiprows=1)
-GNnoWGNdataiter = GNnoWGNdatatruth[:,0]
-
-GNnoWGN_Truth = []
-generateUAVData(GNnoWGN_Truth,GNnoWGNdatatruth,num_of_uavs)
-
-GNWGNdatatruth = np.loadtxt("../output_data/MovingUAV_GN,WGN.csv",delimiter=",",skiprows=1)
-GNWGNdataiter = GNWGNdatatruth[:,0]
-
-GNWGN_Truth = []
-generateUAVData(GNWGN_Truth,GNWGNdatatruth,num_of_uavs)
-
-
-LMnoWGNdatatruth = np.loadtxt("../output_data/MovingUAV_LM,noWGN.csv",delimiter=",",skiprows=1)
-LMnoWGNdataiter = LMnoWGNdatatruth[:,0]
-
-LMnoWGN_Truth = []
-generateUAVData(LMnoWGN_Truth,LMnoWGNdatatruth,num_of_uavs)
-
-LMWGNdatatruth = np.loadtxt("../output_data/MovingUAV_LM,WGN.csv",delimiter=",",skiprows=1)
-LMWGNdataiter = LMWGNdatatruth[:,0]
-
-LMWGN_Truth = []
-generateUAVData(LMWGN_Truth,LMWGNdatatruth,num_of_uavs)
-
-KFnoWGNdatatruth = np.loadtxt("../output_data/MovingUAV_KALMANFILTER,noWGN.csv",delimiter=",",skiprows=1)
-KFnoWGNdataiter = KFnoWGNdatatruth[:,0]
-
-KFnoWGN_Truth = []
-generateUAVData(KFnoWGN_Truth,KFnoWGNdatatruth,num_of_uavs)
-
-KFWGNdatatruth = np.loadtxt("../output_data/MovingUAV_KALMANFILTER,WGN.csv",delimiter=",",skiprows=1)
-KFWGNdataiter = KFWGNdatatruth[:,0]
-
-KFWGN_Truth = []
-generateUAVData(KFWGN_Truth,KFWGNdatatruth,num_of_uavs)
-
-#The fifth file is data that represents the estimated UAV coordinates for each state
-GNnoWGNdataest = np.loadtxt("../output_data/UAVConvergence_GN,noWGN.csv",delimiter=",",skiprows=1)
+#The fourth file is data that represents the estimated UAV coordinates for each state
+GNnoWGNdataest = np.loadtxt("../output_data/UAVEstimates_GN,noWGN.csv",delimiter=",",skiprows=1)
 GNnoWGNdataiter_est = GNnoWGNdataest[:,0]
 
 GNnoWGN_Guess = []
 generateUAVData(GNnoWGN_Guess,GNnoWGNdataest,num_of_uavs)
 
-GNWGNdataest = np.loadtxt("../output_data/UAVConvergence_GN,WGN.csv",delimiter=",",skiprows=1)
+GNWGNdataest = np.loadtxt("../output_data/UAVEstimates_GN,WGN.csv",delimiter=",",skiprows=1)
 GNWGNdataiter_est = GNWGNdataest[:,0]
 
 GNWGN_Guess = []
 generateUAVData(GNWGN_Guess,GNWGNdataest,num_of_uavs)
 
-LMnoWGNdataest = np.loadtxt("../output_data/UAVConvergence_LM,noWGN.csv",delimiter=",",skiprows=1)
+LMnoWGNdataest = np.loadtxt("../output_data/UAVEstimates_LM,noWGN.csv",delimiter=",",skiprows=1)
 LMnoWGNdataiter_est = LMnoWGNdataest[:,0]
 
 LMnoWGN_Guess = []
 generateUAVData(LMnoWGN_Guess,LMnoWGNdataest,num_of_uavs)
 
-LMWGNdataest = np.loadtxt("../output_data/UAVConvergence_LM,WGN.csv",delimiter=",",skiprows=1)
+LMWGNdataest = np.loadtxt("../output_data/UAVEstimates_LM,WGN.csv",delimiter=",",skiprows=1)
 LMWGNdataiter_est = LMWGNdataest[:,0]
 
 LMWGN_Guess = []
 generateUAVData(LMWGN_Guess,LMWGNdataest,num_of_uavs)
 
-KFnoWGNdataest = np.loadtxt("../output_data/UAVConvergence_KALMANFILTER,noWGN.csv",delimiter=",",skiprows=1)
+KFnoWGNdataest = np.loadtxt("../output_data/UAVEstimates_KALMANFILTER,noWGN.csv",delimiter=",",skiprows=1)
 KFnoWGNdataiter_est = KFnoWGNdataest[:,0]
 
 KFnoWGN_Guess = []
 generateUAVData(KFnoWGN_Guess,KFnoWGNdataest,num_of_uavs)
 
-KFWGNdataest = np.loadtxt("../output_data/UAVConvergence_KALMANFILTER,WGN.csv",delimiter=",",skiprows=1)
+KFWGNdataest = np.loadtxt("../output_data/UAVEstimates_KALMANFILTER,WGN.csv",delimiter=",",skiprows=1)
 KFWGNdataiter_est = KFWGNdataest[:,0]
 
 KFWGN_Guess = []
 generateUAVData(KFWGN_Guess,KFWGNdataest,num_of_uavs)
 
-#Methods that plot Telemetry Benchmarks for the 3D coordinates in comparison between moving UAVs and estimates
+#The fifth file is data for the radar anchor points
 
-def plotTelemetryBenchmark(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n):
+def getRadarAnchors(lst,RadarAnchors,n):
+
+    for i in range(0,n):
+        RadarAnchorList = []
+        for j in range(3*i,3*i + 3):
+            RadarAnchorList.append(RadarAnchors[j])
+        lst.append(RadarAnchorList)
+    return lst 
+
+RadarAnchorData = np.loadtxt("../output_data/RadarAnchors.csv",delimiter=",",skiprows=1)
+RadarAnchorList = []
+RadarAnchorLocations = getRadarAnchors(RadarAnchorList,RadarAnchorData,num_of_uavs)
+
+#Methods that plot convergence benchmarks for the esimated UAV coordinates
+
+def plotEstimationBenchmark(iterEst,coordEst,RadarAnchors,Estmethod,n):
     for i in range(0,n):
         fig, axs = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
         fig.suptitle(rf"UAV Tracking {Estmethod}, {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\gamma$ = {gamma}: UAV {i+1}",
                       fontsize=12, fontweight='bold')
-        TruthcoordX = coordTruth[i][0]
-        TruthcoordY = coordTruth[i][1]
-        TruthcoordZ = coordTruth[i][2]
+        RAcoordX = RadarAnchors[i][0]
+        RAcoordY = RadarAnchors[i][1]
+        RAcoordZ = RadarAnchors[i][2]
         EstcoordX = coordEst[i][0]
         EstcoordY = coordEst[i][1]
         EstcoordZ = coordEst[i][2]
 
         # Panel for x-axis
-        axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[0].plot(iterTruth, TruthcoordX, color='blue', linewidth=2, label =rf"Ground truth coordinate, UAV {i+1}")
-        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--', label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[0].axhline(y=RAcoordX, color='red', linestyle='--', label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[0].set_ylabel("X-axis")
 
         # Panel for y-axis
-        axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[1].plot(iterTruth, TruthcoordY, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[1].axhline(y=RAcoordY, color='red', linestyle='--',label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[1].set_ylabel("Y-axis")
 
         # Panel for z-axis
-        axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[2].plot(iterTruth, TruthcoordZ, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[2].axhline(y=RAcoordZ, color='red', linestyle='--',label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[2].set_ylabel("Z-axis")
 
         for ax in axs:
@@ -314,38 +281,35 @@ def plotTelemetryBenchmark(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n):
             ax.set_facecolor('#fcfcfc')
         plt.tight_layout()
 
-        plt.savefig(rf'../plots/{Estmethod}_TelemetryBenchmarkUAV{i+1}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(rf'../plots/{Estmethod}_EstimationBenchmarkUAV{i+1}.png', dpi=300, bbox_inches='tight')
         plt.show()
 
 
-def plotTelemetryBenchmark_WGN(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n):
+def plotEstimationBenchmark_WGN(iterEst,coordEst,RadarAnchors,Estmethod,n):
     for i in range(0,n):
         fig, axs = plt.subplots(3, 1, figsize=(9, 7), sharex=True)
         fig.suptitle(rf"UAV Tracking {Estmethod} WGN, {num_of_landmarks} Landmarks, $r_{{radar}}$ = {radar_radius},$r_{{guess}}$ = {uav_guess_radius}, $\sigma^2$ = {variance}: UAV {i+1}",
                       fontsize=12, fontweight='bold')
-        TruthcoordX = coordTruth[i][0]
-        TruthcoordY = coordTruth[i][1]
-        TruthcoordZ = coordTruth[i][2]
+        RAcoordX = RadarAnchors[i][0]
+        RAcoordY = RadarAnchors[i][1]
+        RAcoordZ = RadarAnchors[i][2]
         EstcoordX = coordEst[i][0]
         EstcoordY = coordEst[i][1]
         EstcoordZ = coordEst[i][2]
-
+        
         # Panel for x-axis
-        axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[0].plot(iterTruth, TruthcoordX, color='blue', linewidth=2, label =rf"Ground truth coordinate, UAV {i+1}")
-        axs[0].axhline(y=TruthcoordX[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        axs[0].plot(iterEst, EstcoordX, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[0].axhline(y=RAcoordX, color='red', linestyle='--', label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[0].set_ylabel("X-axis")
-
+        
         # Panel for y-axis
-        axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[1].plot(iterTruth, TruthcoordY, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[1].axhline(y=TruthcoordY[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        axs[1].plot(iterEst, EstcoordY, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[1].axhline(y=RAcoordY, color='red', linestyle='--',label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[1].set_ylabel("Y-axis")
-
-        # Panel for z-axis
-        axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='red', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
-        axs[2].plot(iterTruth, TruthcoordZ, color='blue', linewidth=2, label=rf'Ground truth coordinate, UAV {i+1}')
-        axs[2].axhline(y=TruthcoordZ[-1], color='green', linestyle='--',label = rf"Final Ground truth coordinate, UAV {i+1}", alpha=0.5)
+        
+                # Panel for z-axis
+        axs[2].plot(iterEst, EstcoordZ, marker = 'o',linestyle='-', color='blue', linewidth=2, label=rf'Estimated coordinate, UAV {i+1}')
+        axs[2].axhline(y=RAcoordZ, color='red', linestyle='--',label = rf"Radar Anchor coordinate", alpha=0.5)
         axs[2].set_ylabel("Z-axis")
 
         for ax in axs:
@@ -354,16 +318,16 @@ def plotTelemetryBenchmark_WGN(iterTruth,iterEst,coordTruth,coordEst,Estmethod,n
             ax.set_facecolor('#fcfcfc')
         plt.tight_layout()
 
-        plt.savefig(rf'../plots/{Estmethod}_WGN_TelemetryBenchmarkUAV{i+1}.png', dpi=300, bbox_inches='tight')
+        plt.savefig(rf'../plots/{Estmethod}_WGN_EstimationBenchmarkUAV{i+1}.png', dpi=300, bbox_inches='tight')
         plt.show()
 
 
-plotTelemetryBenchmark(GNnoWGNdata_iter,GNnoWGNdataiter_est,GNnoWGN_Truth,GNnoWGN_Guess,"GaussNewton",num_of_uavs)
-plotTelemetryBenchmark_WGN(GNWGNdata_iter,GNWGNdataiter_est,GNWGN_Truth,GNWGN_Guess,"GaussNewton",num_of_uavs)
-plotTelemetryBenchmark(LMnoWGNdata_iter,LMnoWGNdataiter_est,LMnoWGN_Truth,LMnoWGN_Guess,"LevenbergMarquardt",num_of_uavs)
-plotTelemetryBenchmark_WGN(LMWGNdata_iter,LMWGNdataiter_est,LMWGN_Truth,LMWGN_Guess,"LevenbergMarquardt",num_of_uavs)
-plotTelemetryBenchmark(KFnoWGNdata_iter,KFnoWGNdataiter_est,KFnoWGN_Truth,KFnoWGN_Guess,"KalmanFilter",num_of_uavs)
-plotTelemetryBenchmark_WGN(KFWGNdata_iter,KFWGNdataiter_est,KFWGN_Truth,KFWGN_Guess,"KalmanFilter",num_of_uavs)
+plotEstimationBenchmark(GNnoWGNdata_iter,GNnoWGN_Guess,RadarAnchorLocations,"Gauss-Newton",num_of_uavs)
+plotEstimationBenchmark_WGN(GNWGNdata_iter,GNWGN_Guess,RadarAnchorLocations,"Gauss-Newton",num_of_uavs)
+plotEstimationBenchmark(LMnoWGNdata_iter,LMnoWGN_Guess,RadarAnchorLocations,"Levenberg-Marquardt",num_of_uavs)
+plotEstimationBenchmark_WGN(LMWGNdata_iter,LMWGN_Guess,RadarAnchorLocations,"Levenberg-Marquardt",num_of_uavs)
+plotEstimationBenchmark(KFnoWGNdata_iter,KFnoWGN_Guess,RadarAnchorLocations,"Kalman Filter",num_of_uavs)
+plotEstimationBenchmark_WGN(KFWGNdata_iter,KFWGN_Guess,RadarAnchorLocations,"Kalman Filter",num_of_uavs)
 
 
 

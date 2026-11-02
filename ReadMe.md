@@ -2,7 +2,9 @@
 
 This project implements a modular object-oriented radar system in C++ for estimating and tracking UAV coordinates.
 
-The project models UAV tracking as a dynamic data assimilation problem using a generated radar environment consisting of landmark locations and UAV coordinates. The UAVs are assumed to be moving and isolated within the monitored environment where radar measurements are available. Thus, the implemented methods address a numerical state-estimation and tracking problem rather than a detection problem.
+The project models UAV tracking as a data assimilation problem using a generated radar environment consisting of landmark locations and fixed physical radar anchor points treated as ground stations with attached antennas emitting microwave signals in order to collect distance data and estimate the UAV coordinates.
+
+The UAVs are assumed to be isolated and radar measurements are available, plus the radar system has collected data about initial UAV estimates. Thus, the implemented methods address a numerical state-estimation and tracking problem rather than a detection problem.
 
 The radar system was developed as an independent R&D project with focus on:
 
@@ -28,8 +30,7 @@ The project includes:
 - Pseudo-randomized radar environment including landmark locations and sensor data generation
 - Tracking of Multiple UAVs
 - Sensor data estimation using implemented numerical estimation methods
-- Kinematic UAV movement prediction
-- Wind disturbance
+- Kalman filtering techniques for modelling uncertainty in radar measurements and kinematic UAV movement prediction
 - White Gaussian Noise sensor simulation
 - Custom generic data structures
 - Memory management using smart pointers
@@ -53,15 +54,11 @@ Provides matrix storage and numerical operations used throughout the estimation 
 
 ### generateRadarStructure
 
-Responsible for generating the radar environment by using pseudo-randomized seeds stored in matrix structures.
-
-### PhysicalConstraints
-
-Designed for kinematic movement prediction.
+Responsible for generating the radar environment by using pseudo-randomized seeds and construct coordinates for landmark locations, physical radar anchor points and initial UAV estimates.
 
 ### GenerateWGNSource
 
-Responsible for the generation of potential noisy sensor data sources to true distances of the moving UAVs relative to landmark locations, using White Gaussian Noise. It is designed for choosing the option to either generate the noisy data or to keep the UAV Tracking problem ideal.
+Responsible for the generation of potential noisy sensor data sources to true distances of the physical radar anchor points relative to landmark locations, using White Gaussian Noise. It is designed for choosing the option to either generate the noisy data or to keep the UAV Tracking problem ideal.
 
 ### TrackingParameters
 
@@ -69,7 +66,7 @@ Stores and manages tracking-related data between states.
 
 ### MatrixCalculations
 
-Responsible for the mathematical operations underlying the dynamic data assimilation framework.
+Responsible for the mathematical operations underlying the data assimilation framework.
 
 ### GaussNewton
 
@@ -134,11 +131,11 @@ The script generates the simulation results and visualizes the estimation perfor
 
 ## Mathematical Background
 
-The UAV Tracking (UT) problem is formulated as a dynamic data assimilation problem. The UAVs are assumed to be mutually independent, meaning that there are no interactions, communications or coupling between the tracked targets that are taken into consideration.
+The UAV Tracking (UT) problem is formulated as a data assimilation problem. The UAVs are assumed to be mutually independent, meaning that there are no interactions, communications or coupling between the tracked targets that are taken into consideration. 
 
-The radar environment follows a spherical coordinate system centered at the origin. The ground truth UAV positions and the landmark locations remain within the monitored radar domain while initial UAV estimates may be generated either inside or outside the radar environment.
+The radar environment follows a spherical coordinate system centered at the origin. The landmark locations and the physical radar anchor points remain within the monitored radar domain while initial UAV estimates may be generated either inside or outside the radar environment.
 
-Radar observations are either ideal or affected by potential noisy data sources using White Gaussian Noise to generate real-world sensor uncertainty  relating to true distances of the UAV positions relative to landmark locations. 
+Radar observations are either ideal or affected by potential noisy data sources using White Gaussian Noise to generate real-world sensor uncertainty  relating to true distances of the fixed radar anchor points relative to landmark locations. 
 
 Estimated positions are calculated through nonlinear least-squares optimization using an implemented numerical estimation method strategy: Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering techniques. 
 
@@ -161,12 +158,10 @@ Experiments were designed to evaluate estimation performance behavior under situ
 
 The results show that:
 
-- The estimator performs reliably under the ideal case. In the uncertainty case, however, the reliability tends to decrease as the noise level increases with respect to the variance relating to the true distances of the UAV positions relative to landmark locations. 
-- Strong wind disturbances and higher UAV velocity magnitudes increase the risk of numerical instability.
-- The Gauss-Newton method remains effective when provided with initial UAV estimates that are reasonably far from the moving UAVs in the radar. 
+- The estimator performs reliably under the ideal case. In the uncertainty case, however, the reliability tends to decrease as the noise level increases with respect to the variance relating to the true distances of the radar anchor points relative to landmark locations. 
+- The Gauss-Newton method remains effective when provided with initial UAV estimates that are reasonably far from the radar domain. 
 - The Levenberg-Marquardt method provided a robust performance based on the Trust-Region approach, tending to converge earlier than the Gauss-Newton method when the least square problems are sufficiently regularized.
-- The Kalman filtering method demonstrated reliable and robust performance, although at a higher computational cost when provided with properly calibrated covariance matrices P, Q and R, and when the noise level increases. Depending on the covariance calibration and the filter tuning, the Kalman filtering method tends to outperform the Gauss-Newton method yet has potential to be as effective as Levenberg-Marquardt in convergence. For extremely large distances from the radar origin, Kalman filtering may provide the most robust estimation strategy.
-- In the uncertainty case, when provided with an additional stop criterion when the absolute error between the previous and current step L2-norm is sufficiently small, all methods converge physically in a neighborhood around the moving UAVs in the monitored radar domain. 
+- The Kalman filtering method demonstrated reliable and robust performance, although at a higher computational cost when provided with properly calibrated covariance matrices P, Q and R, and when the noise level increases. Depending on the covariance calibration and the filter tuning, the Kalman filtering method tends to outperform the Gauss-Newton method yet has potential to be as effective as Levenberg-Marquardt in convergence, especially if fewer landmark locations and initial UAV estimates generated sufficiently far from the radar domain is taken into consideration. For extremely large distances from the radar origin, Kalman filtering may provide the most robust estimation strategy.
 
 ##  Future Improvements
 
@@ -200,7 +195,6 @@ The project was developed using:
 - QR-decomposition
 - Givens matrices
 - Covariance-based Uncertainty modelling for the Kalman-filtering method
-- Line Search (for the kinematic UAV movement prediction)
 
 ### Mathematical Concepts
 

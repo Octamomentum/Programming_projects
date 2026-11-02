@@ -23,12 +23,10 @@ using Matrix = MatrixObject<T>;
 
 template <typename T>
 class MatrixCalculations{
-
-private:
+   
+public:
 
 GenerateWGNSource<T> generate_wgn;
-
-public:
 
 //Help method for initializing lambda that is used in the StateEstimator class, which does retrieve the largest element from a vector
 
@@ -66,9 +64,20 @@ for(size_t i = 0;i < vec.getRows();i++){
 return std::sqrt(summation);    
 }
 
+//Construct an identity matrix 
+Matrix<T> getIdentityMatrix(const size_t& m)const{
+
+Matrix<T> IdentityMatrix(m,m);
+
+for(size_t i = 0; i < m;i++){
+   IdentityMatrix(i,i) = 1.0;
+}
+
+return IdentityMatrix;
+}
+
 //Method that calculates Euclidean distances relative to the rows of a matrix 
 Matrix<T> distanceMetric(const Matrix<T>& mat,const Matrix<T>& vec)const{
-
 Matrix<T> dist(mat.getRows(),1);
 
 for(size_t i = 0;i < mat.getRows();i++){
@@ -80,6 +89,28 @@ for(size_t i = 0;i < mat.getRows();i++){
 }
 
 return dist;   
+}
+
+//Generate available radar measurements used for the UAV Tracking problem
+Matrix<T> generateRadarMeasurements(const UAVTracking_parameters& uavParams,const Matrix<T>& LandmarkMatrix, const Matrix<T>& RadarAnchors)const{
+
+size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
+Matrix<T> distRadar(m,1);
+//For each sought UAV, generate distances of the corresponding physical radar anchor point relative to the landmarks
+for(size_t i = 0;i < uavParams.dimension.num_of_uavs;i++){
+   Matrix<T> radar_anchor = RadarAnchors.getRow(i);
+   Matrix<T> distances = distanceMetric(LandmarkMatrix,radar_anchor);
+   Matrix<T> added_wgn(distances.getRows(),1);
+   //Add WGN if option is available
+   if(uavParams.options.applyWGN){
+     size_t var_ind = uavParams.seeds.variance_seedvalue + i; 
+     generate_wgn.GenerateWGN(distances,var_ind,uavParams.variance.variance_distances); 
+   }
+   for(size_t j = 0;j < uavParams.dimension.num_of_landmarks;j++){
+      distRadar(i*uavParams.dimension.num_of_landmarks + j,0) = distances(j,0);
+   }
+}
+return distRadar;
 }
 
 //Method that transforms a vectorized matrix object to an actual matrix structure
@@ -101,39 +132,25 @@ return mat;
 }
 
 //Method that constructs a block matrix of Jacobians and a vectorized residual vector for data assimilation relating to UAV coordinate estimation
-auto GenerateMatrixData(const UAVTracking_parameters& uavParams, const TrackingParameters& trackingParams, const Matrix<T>& guess,
-    const std::tuple<Matrix<size_t>,size_t> varianceParams)const{
+auto GenerateMatrixData(const UAVTracking_parameters& uavParams, const TrackingParameters& trackingParams, const Matrix<T>& distRadar)const{
 
-Matrix<size_t> VarianceSeed = std::get<0>(varianceParams);
-size_t iter = std::get<1>(varianceParams);
 //Initialize a block matrix whose diagonal elements will consist of Jacobian relating to each corresponding UAV
 size_t m = uavParams.dimension.num_of_landmarks*uavParams.dimension.num_of_uavs;
 size_t n = 3*uavParams.dimension.num_of_uavs;
 Matrix<T> J(m,n);
 Matrix<T> r(m,1);
-//For each UAV, calculate Jacobian and residuals
+//For each sought UAV, calculate Jacobian and residuals
 for(size_t uav_ind = 0;uav_ind < uavParams.dimension.num_of_uavs;uav_ind++){
-  Matrix<T> uav_truth(3,1);
-  Matrix<T> uav_guess(3,1);
-  for(size_t i = 0; i < 3;i++){
-    uav_truth(i,0) = trackingParams.UAVTruth(uav_ind,i);
-    uav_guess(i,0) = guess(uav_ind,i);  
-  }
-  Matrix<T> dist_truth = distanceMetric(trackingParams.mat,uav_truth);
-  //Generate WGN if option is available
-  if(uavParams.options.applyWGN){
-    size_t var_ind = VarianceSeed(uav_ind,0) + iter;
-    generate_wgn.GenerateWGN(dist_truth,var_ind,uavParams.variance.variance_distances);
-  }
-  Matrix<T> dist_guess = distanceMetric(trackingParams.mat,uav_guess); 
+  Matrix<T> uav = trackingParams.UAV.getRow(uav_ind);
+  Matrix<T> dist_uav = distanceMetric(trackingParams.LandmarkMatrix,uav); 
   for(size_t i = 0;i < uavParams.dimension.num_of_landmarks;i++){
      for(size_t j = 0;j < 3;j++){
-        J(i + uavParams.dimension.num_of_landmarks*uav_ind,3*uav_ind+j) = (uav_guess(j,0)-trackingParams.mat(i,j))/dist_guess(i,0);
+        J(i + uavParams.dimension.num_of_landmarks*uav_ind,3*uav_ind+j) = (uav(j,0)-trackingParams.LandmarkMatrix(i,j))/dist_uav(i,0);
      }
    }
 
   for(size_t i = 0;i < uavParams.dimension.num_of_landmarks;i++){
-     r(i + uavParams.dimension.num_of_landmarks*uav_ind,0) = dist_truth(i,0) - dist_guess(i,0); 
+     r(i + uavParams.dimension.num_of_landmarks*uav_ind,0) = distRadar(i + uavParams.dimension.num_of_landmarks*uav_ind,0) - dist_uav(i,0); 
    }
 }
 return std::make_tuple(J,r);
@@ -180,18 +197,6 @@ if(std::abs(val) > eps){
    }
 }
 return std::make_tuple(R,b_tilde);
-}
-
-//Construct an identity matrix
-Matrix<T> getIdentityMatrix(const size_t& m)const{
-
-Matrix<T> IdentityMatrix(m,m);
-
-for(size_t i = 0; i < m;i++){
-   IdentityMatrix(i,i) = 1.0;
-}
-
-return IdentityMatrix;
 }
 
 //Help function that constructs filtered versions of any matrix A and vector b to form an upper triangular structure.

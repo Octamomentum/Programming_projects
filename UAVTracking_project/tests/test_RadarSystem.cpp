@@ -10,12 +10,10 @@ TEST(NegativeSeeds,InvalidSeedValues){
 //Negative seed test
 UAVTracking_parameters uavParams; 
 uavParams.seeds.landmark_seedvalue = 6;
-uavParams.seeds.uav_guess_seedvalue = -8;
-uavParams.seeds.uav_truth_seedvalue = 1;
-uavParams.seeds.initial_velocity_seedvalue = 2;
-uavParams.seeds.initial_wind_velocity_seedvalue = 3;
+uavParams.seeds.uav_seedvalue = -8;
+uavParams.seeds.radar_anchors_seedvalue = -3232;
 uavParams.seeds.variance_seedvalue = 7;
-EXPECT_THROW({radar.generateSeeds(uavParams);},std::invalid_argument);
+EXPECT_THROW({radar.generateRadar(uavParams);},std::invalid_argument);
 }
 
 TEST(LandmarksInitialization,TooFewLandmarks){
@@ -24,7 +22,7 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 2;
 uavParams.dimension.num_of_uavs = 1000;
 uavParams.posParams.radar_radius = 10.0;
-EXPECT_THROW({radar.generateSeeds(uavParams);},std::invalid_argument);
+EXPECT_THROW({radar.generateRadar(uavParams);},std::invalid_argument);
 }
 
 TEST(UAVsInitializations,TooFewUAVs){
@@ -33,18 +31,17 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 2;
 uavParams.dimension.num_of_uavs = -1000;
 uavParams.posParams.radar_radius = 10.0;
-EXPECT_THROW({radar.generateSeeds(uavParams);},std::invalid_argument);
+EXPECT_THROW({radar.generateRadar(uavParams);},std::invalid_argument);
 }
 
 TEST(GenerateRadar,negativeposParams){
-//Testing if any of the posParams is negative for the radar field
+//Testing if any of the relevant posParams parameters is negative for the radar domain construction
 UAVTracking_parameters uavParams; 
 uavParams.dimension.num_of_landmarks = 10;
 uavParams.dimension.num_of_uavs = 1e4;
 uavParams.posParams.radar_radius = -10;
 uavParams.posParams.uav_guess_radius = 50;
-auto [lm_seed,uav_truth_seed,uav_guess_seed,vel_uav_seed,vel_wind_seed,variance_seed] = radar.generateSeeds(uavParams);
-EXPECT_THROW({radar.generateRadar(uavParams,lm_seed,uav_truth_seed,uav_guess_seed);},std::invalid_argument);
+EXPECT_THROW({radar.generateRadar(uavParams);},std::invalid_argument);
 }
 
 TEST(GenerateRadarSystem,AWorkingExample){
@@ -53,12 +50,10 @@ UAVTracking_parameters uavParams;
 uavParams.dimension.num_of_landmarks = 150;
 uavParams.dimension.num_of_uavs = 2;
 uavParams.seeds.landmark_seedvalue = 12;
-uavParams.seeds.uav_guess_seedvalue = 13;
-uavParams.seeds.uav_truth_seedvalue = 16;
-uavParams.seeds.initial_velocity_seedvalue = 18;
-uavParams.seeds.initial_wind_velocity_seedvalue = 21;
+uavParams.seeds.uav_seedvalue = 13;
+uavParams.seeds.radar_anchors_seedvalue = 13;
 uavParams.seeds.variance_seedvalue = 23;
 uavParams.posParams.radar_radius = 100;
 uavParams.posParams.uav_guess_radius = 1000;
-auto [LandmarkMatrix,UAV,VelocitySeeds,VarianceSeed] = radar.generateGlobalEnvironment(uavParams);
+auto [LandmarkMatrix,UAV,RadarAnchors] = radar.generateGlobalEnvironment(uavParams);
 }

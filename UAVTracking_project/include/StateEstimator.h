@@ -1,6 +1,6 @@
 /**
  * @file StateEstimator.h
- * @brief The main class for using a desired numerical estimation method and optional choice to generate WGN to the UAV Tracking problem.
+ * @brief The main class for using a chosen numerical estimation method and optional choice to generate WGN to the UAV Tracking problem.
   
   *Three strategies are used in this class:
    Gauss-Newton, Levenberg-Marquardt and an approach using Kalman filtering techniques. Their implementations can be found in their unique classes.
@@ -17,14 +17,12 @@
 template <typename T>
 class StateEstimator{
 
-private:
+public:
 
 MatrixCalculations<T> matcalc;
 GaussNewton<T> gn_solver;
 LevenbergMarquardt<T> lm_solver;
 KalmanFilter<T> kf_solver;
-
-public:
 
 struct EstOutput{
 T dir_vec_normval = 0.0;
@@ -53,28 +51,28 @@ return lambda;
 
 //The numerical estimation solver for the UAV Tracking problem: it either uses Gauss-Newton, Levenberg-Marquardt or an approach using Kalman filtering
 //techniques
-auto State_Estimator(const UAVTracking_parameters& uavParams, TrackingParameters& trackingParams,
-  const std::tuple<Matrix<size_t>,size_t>& varianceParams)const{
+auto State_Estimator(const UAVTracking_parameters& uavParams, TrackingParameters& trackingParams,const Matrix<T>& distRadar,const size_t& iter)const{
  
-    //Checking if the chosen method is wrong
+//Checking if the chosen method is wrong
 if(uavParams.options.activate_method != "G-N" && uavParams.options.activate_method != "L-M" && uavParams.options.activate_method != "Kalman"){
   throw std::invalid_argument("Wrong method.");
 }
 T dir_vec_normval = 0.0;
-T res_normval = 0.0;  Matrix<T> dir_vec(3*uavParams.dimension.num_of_uavs,1);
-  Matrix<T> trial_vec(uavParams.dimension.num_of_uavs,3);
-  auto [J,r] = matcalc.GenerateMatrixData(uavParams,trackingParams,trackingParams.UAVGuess,varianceParams);
-   auto [R,b_tilde] = matcalc.QRDecomposition_GivensApproach(J,r,uavParams.est.eps); 
+T res_normval = 0.0; 
+Matrix<T> dir_vec(3*uavParams.dimension.num_of_uavs,1);
+Matrix<T> trial_vec(uavParams.dimension.num_of_uavs,3);
+
+auto [J,r] = matcalc.GenerateMatrixData(uavParams,trackingParams,distRadar);
+auto [R,b_tilde] = matcalc.QRDecomposition_GivensApproach(J,r,uavParams.est.eps); 
    
 //Initialize damping
-size_t iter = std::get<1>(varianceParams);
 if(iter == 0){
   trackingParams.lambda = initializeLambda(J,uavParams.est.tau); 
 }
   //Perform G-N if such option is chosen
-  if(uavParams.options.activate_method == "G-N"){
-    dir_vec = gn_solver.GaussNewton_Approach(R,b_tilde);
-    }
+if(uavParams.options.activate_method == "G-N"){
+  dir_vec = gn_solver.GaussNewton_Approach(R,b_tilde);
+  }
 
 //Perform L-M if the option is chosen
 if(uavParams.options.activate_method == "L-M"){
@@ -83,14 +81,14 @@ if(uavParams.options.activate_method == "L-M"){
 
 //Perform Kalman filtering if the option is chosen
 if(uavParams.options.activate_method == "Kalman"){
-dir_vec = kf_solver.KalmanFilter_Approach(uavParams,trackingParams,R,b_tilde);
+dir_vec = kf_solver.KalmanFilter_Approach(uavParams,trackingParams.P,R,b_tilde);
 }
 
  dir_vec_normval = matcalc.L2Norm(dir_vec);
  res_normval = matcalc.L2Norm(r);
  Matrix<T> transformedSolution = matcalc.transformVectorToMatrix(dir_vec,uavParams.dimension.num_of_uavs);
- trial_vec = transformedSolution + trackingParams.UAVGuess;   
- trackingParams.UAVGuess = trial_vec;
+ trial_vec = transformedSolution + trackingParams.UAV;   
+ trackingParams.UAV = trial_vec;
 return std::make_tuple(dir_vec_normval,res_normval);
 
 }
