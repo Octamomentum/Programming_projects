@@ -3,7 +3,6 @@
 #include "MatrixCalculations.h"
 #include "UAVTracking_parameters.h"
 #include <gtest/gtest.h>
-#include <iostream>
 
 MatrixCalculations<double> matcalc;
 

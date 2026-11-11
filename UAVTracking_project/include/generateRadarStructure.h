@@ -14,7 +14,6 @@
 #include "MatrixCalculations.h"
 #include <random>
 #include <tuple>
-#include <math.h>
 #include <cmath>
 
 template <typename T>

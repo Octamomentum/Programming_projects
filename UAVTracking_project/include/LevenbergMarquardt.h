@@ -8,6 +8,7 @@
 #pragma once
 #include "MatrixCalculations.h"
 #include "TrackingParameters.h"
+#include <iostream>
 
 template <typename T>
 class LevenbergMarquardt{
